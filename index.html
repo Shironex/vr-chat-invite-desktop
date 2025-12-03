@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Update this title to match HTML_TITLE in src/config/app.config.ts -->
+    <title>Electron Starter Template</title>
+    <!-- CSP is now set programmatically in src/helpers/security/csp.ts -->
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <!-- Prevent dark mode flash by applying theme before React loads -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          // System theme - check browser preference
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (prefersDark) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app" />
+    <script type="module" src="/src/renderer.ts"></script>
+  </body>
+</html>

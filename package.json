@@ -1,0 +1,144 @@
+{
+  "name": "electron-starter-template",
+  "productName": "Electron App",
+  "version": "0.1.0",
+  "description": "A modern Electron starter template with React 19, TypeScript, shadcn-ui, i18next, TanStack Router, and comprehensive tooling",
+  "main": "dist-electron/main.js",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "start": "vite",
+    "start:debug": "cross-env DEBUG=1 vite",
+    "start:debug:win": "set DEBUG=1 && vite",
+    "build": "vite build",
+    "dist": "vite build && electron-builder",
+    "dist:dir": "vite build && electron-builder --dir",
+    "publish": "vite build && electron-builder --publish always",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:unit": "vitest",
+    "test:e2e": "playwright test",
+    "test:all": "vitest run && playwright test"
+  },
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/your-repo.git"
+  },
+  "build": {
+    "appId": "com.yourcompany.yourapp",
+    "productName": "Electron App",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Electron App"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "yourusername",
+      "repo": "your-repo"
+    }
+  },
+  "devDependencies": {
+    "@electron/fuses": "~1.8.0",
+    "@eslint/compat": "^1.4.0",
+    "@eslint/js": "^9.28.0",
+    "@playwright/test": "^1.55.1",
+    "@tanstack/router-plugin": "^1.132.41",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/eslint-config-prettier": "^6.11.3",
+    "@types/node": "^24.7.0",
+    "@types/react": "^19.1.14",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "babel-plugin-react-compiler": "^19.1.0-rc.1-rc-af1b7da-20250421",
+    "cross-env": "^10.1.0",
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12",
+    "electron-devtools-installer": "^4.0.0",
+    "electron-playwright-helpers": "^1.8.2",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
+    "globals": "^16.4.0",
+    "jsdom": "^27.0.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "tailwindcss": "^4.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.1",
+    "vite": "^7.1.7",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.7.0",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-collapsible": "^1.1.12",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-navigation-menu": "^1.2.14",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-radio-group": "^1.3.8",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toggle": "^1.1.9",
+    "@radix-ui/react-toggle-group": "^1.1.11",
+    "@tailwindcss/vite": "^4.1.13",
+    "@tanstack/react-query": "^5.90.2",
+    "@tanstack/react-router": "^1.132.41",
+    "@tanstack/react-router-devtools": "^1.132.41",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.6.2",
+    "electron-window-state": "^5.0.3",
+    "i18next": "^25.5.2",
+    "lucide-react": "^0.544.0",
+    "path-browserify": "^1.0.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-i18next": "^16.0.0",
+    "react-markdown": "^10.1.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.1.11"
+  }
+}

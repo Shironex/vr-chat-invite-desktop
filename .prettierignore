@@ -1,0 +1,8 @@
+# Add files here to ignore them from prettier formatting
+/dist
+/dist-electron
+/coverage
+/.vite
+/release
+README.md
+/src/routeTree.gen.ts

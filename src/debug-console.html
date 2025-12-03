@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Electron App - Debug Console</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Header */
+    #header {
+      background: #161b22;
+      padding: 8px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #58a6ff;
+    }
+
+    #controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    #controls button {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    #controls button:hover {
+      background: #30363d;
+      border-color: #58a6ff;
+    }
+
+    #controls button.active {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+    }
+
+    /* Tabs */
+    #tabs {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 0;
+      padding: 0 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #8b949e;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #c9d1d9;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #58a6ff;
+      border-bottom-color: #58a6ff;
+    }
+
+    .tab-btn .tab-icon {
+      margin-right: 6px;
+    }
+
+    /* Tab Content */
+    .tab-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    /* Console Tab Toolbar */
+    #console-toolbar {
+      background: #161b22;
+      padding: 8px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #searchBox {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+      width: 200px;
+    }
+
+    #searchBox:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    #filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .filter-label input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    /* Console Output */
+    #console {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      padding: 2px 8px;
+      border-left: 3px solid transparent;
+      margin-bottom: 1px;
+      display: none;
+    }
+
+    .log-entry.visible {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .log-entry.info { border-left-color: #58a6ff; }
+    .log-entry.success { border-left-color: #3fb950; color: #3fb950; }
+    .log-entry.warn { border-left-color: #d29922; color: #d29922; }
+    .log-entry.error { border-left-color: #f85149; color: #f85149; }
+    .log-entry.debug { border-left-color: #8b949e; color: #8b949e; }
+    .log-entry.route { border-left-color: #a371f7; color: #a371f7; }
+    .log-entry.ipc { border-left-color: #56d364; color: #56d364; }
+    .log-entry.updater { border-left-color: #f7b731; color: #f7b731; }
+    .log-entry.perf { border-left-color: #ff6b6b; color: #ff6b6b; }
+    .log-entry.network { border-left-color: #4ecdc4; color: #4ecdc4; }
+    .log-entry.state { border-left-color: #ffe66d; color: #ffe66d; }
+    .log-entry.lifecycle { border-left-color: #95e1d3; color: #95e1d3; }
+
+    .log-entry.highlight {
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .timestamp {
+      color: #6e7681;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .level {
+      font-weight: 600;
+      margin-right: 8px;
+      display: inline-block;
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+
+    .window-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-right: 8px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .message {
+      word-break: break-word;
+      flex: 1;
+    }
+
+    #windowFilters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: 8px;
+      padding-left: 8px;
+      border-left: 1px solid #30363d;
+    }
+
+    .window-filter-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 2px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
+      font-family: inherit;
+    }
+
+    .window-filter-btn:hover {
+      background: #30363d;
+    }
+
+    .window-filter-btn.active {
+      border-color: currentColor;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #484f58;
+    }
+
+    /* Stats Bar */
+    #stats {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    #stats span {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    #stats .count {
+      font-weight: 600;
+      color: #c9d1d9;
+    }
+
+    #memoryInfo {
+      margin-left: auto;
+      display: flex;
+      gap: 16px;
+    }
+
+    .memory-stat {
+      display: flex;
+      gap: 4px;
+    }
+
+    .memory-value {
+      font-weight: 600;
+      color: #58a6ff;
+    }
+
+    /* Performance Tab */
+    #perf-content {
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .perf-section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .perf-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .perf-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 12px;
+    }
+
+    .perf-card-label {
+      font-size: 11px;
+      color: #8b949e;
+      margin-bottom: 4px;
+    }
+
+    .perf-card-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #c9d1d9;
+    }
+
+    .perf-card-value.good { color: #3fb950; }
+    .perf-card-value.warn { color: #d29922; }
+    .perf-card-value.bad { color: #f85149; }
+
+    .perf-card-unit {
+      font-size: 12px;
+      color: #8b949e;
+      margin-left: 4px;
+    }
+
+    /* IPC Stats Table */
+    .ipc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .ipc-table th, .ipc-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .ipc-table th {
+      color: #8b949e;
+      font-weight: 500;
+      background: #0d1117;
+    }
+
+    .ipc-table tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* State Tab */
+    #state-content {
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .state-section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .state-section-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .state-section-header:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .state-section-header h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #58a6ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .state-section-content {
+      padding: 16px;
+    }
+
+    .state-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .state-item:last-child {
+      border-bottom: none;
+    }
+
+    .state-key {
+      color: #8b949e;
+      font-size: 12px;
+    }
+
+    .state-value {
+      color: #c9d1d9;
+      font-size: 12px;
+      font-family: monospace;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Network Tab */
+    #network-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #network-toolbar {
+      background: #161b22;
+      padding: 8px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #network-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .network-entry {
+      display: flex;
+      padding: 8px 16px;
+      border-bottom: 1px solid #21262d;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .network-entry:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .network-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .network-status.success { background: #3fb950; }
+    .network-status.error { background: #f85149; }
+    .network-status.pending { background: #d29922; }
+
+    .network-method {
+      font-weight: 600;
+      width: 50px;
+      flex-shrink: 0;
+    }
+
+    .network-method.GET { color: #3fb950; }
+    .network-method.POST { color: #58a6ff; }
+    .network-method.PUT { color: #d29922; }
+    .network-method.DELETE { color: #f85149; }
+
+    .network-url {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #c9d1d9;
+    }
+
+    .network-timing {
+      color: #8b949e;
+      flex-shrink: 0;
+    }
+
+    .network-size {
+      color: #8b949e;
+      flex-shrink: 0;
+      width: 70px;
+      text-align: right;
+    }
+
+    /* Timeline Tab */
+    #timeline-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #timeline-toolbar {
+      background: #161b22;
+      padding: 8px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #timeline-view {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      min-height: 32px;
+    }
+
+    .timeline-label {
+      width: 150px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #8b949e;
+      padding-right: 12px;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .timeline-bar-container {
+      flex: 1;
+      height: 20px;
+      background: #21262d;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .timeline-bar {
+      height: 100%;
+      border-radius: 3px;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 10px;
+      color: #fff;
+      min-width: 40px;
+    }
+
+    .timeline-bar.ipc { background: #56d364; }
+    .timeline-bar.render { background: #58a6ff; }
+    .timeline-bar.network { background: #4ecdc4; }
+    .timeline-bar.lifecycle { background: #95e1d3; }
+
+    /* REPL / Command Palette */
+    #repl-container {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #repl-input {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    #repl-input:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    #repl-input::placeholder {
+      color: #6e7681;
+    }
+
+    .repl-btn {
+      background: #238636;
+      border: 1px solid #2ea043;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .repl-btn:hover {
+      background: #2ea043;
+    }
+
+    /* Empty States */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #8b949e;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-hint {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div id="header">
+    <h1>🐛 Electron App Debug Console</h1>
+    <div id="controls">
+      <button id="autoScrollBtn" class="active" title="Toggle auto-scroll">📜 Auto-scroll</button>
+      <button id="clearBtn">🗑️ Clear</button>
+      <button id="exportBtn">💾 Export</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="console">
+      <span class="tab-icon">📋</span>Console
+    </button>
+    <button class="tab-btn" data-tab="performance">
+      <span class="tab-icon">⚡</span>Performance
+    </button>
+    <button class="tab-btn" data-tab="state">
+      <span class="tab-icon">📊</span>State
+    </button>
+    <button class="tab-btn" data-tab="network">
+      <span class="tab-icon">🌐</span>Network
+    </button>
+    <button class="tab-btn" data-tab="timeline">
+      <span class="tab-icon">📈</span>Timeline
+    </button>
+  </div>
+
+  <!-- Console Tab -->
+  <div id="panel-console" class="tab-panel active">
+    <div id="console-toolbar">
+      <input type="text" id="searchBox" placeholder="🔍 Search logs..." />
+      <div id="filters">
+        <span style="font-size: 11px; color: #8b949e;">Filters:</span>
+        <label class="filter-label" style="color: #58a6ff;">
+          <input type="checkbox" id="filter-info" checked> Info
+        </label>
+        <label class="filter-label" style="color: #3fb950;">
+          <input type="checkbox" id="filter-success" checked> Success
+        </label>
+        <label class="filter-label" style="color: #d29922;">
+          <input type="checkbox" id="filter-warn" checked> Warn
+        </label>
+        <label class="filter-label" style="color: #f85149;">
+          <input type="checkbox" id="filter-error" checked> Error
+        </label>
+        <label class="filter-label" style="color: #8b949e;">
+          <input type="checkbox" id="filter-debug" checked> Debug
+        </label>
+        <label class="filter-label" style="color: #a371f7;">
+          <input type="checkbox" id="filter-route" checked> Route
+        </label>
+        <label class="filter-label" style="color: #56d364;">
+          <input type="checkbox" id="filter-ipc" checked> IPC
+        </label>
+        <label class="filter-label" style="color: #f7b731;">
+          <input type="checkbox" id="filter-updater" checked> Updater
+        </label>
+        <label class="filter-label" style="color: #ff6b6b;">
+          <input type="checkbox" id="filter-perf" checked> Perf
+        </label>
+        <label class="filter-label" style="color: #4ecdc4;">
+          <input type="checkbox" id="filter-network" checked> Network
+        </label>
+        <label class="filter-label" style="color: #ffe66d;">
+          <input type="checkbox" id="filter-state" checked> State
+        </label>
+        <label class="filter-label" style="color: #95e1d3;">
+          <input type="checkbox" id="filter-lifecycle" checked> Lifecycle
+        </label>
+      </div>
+      <div id="windowFilters">
+        <span style="font-size: 11px; color: #8b949e;">Windows:</span>
+        <button class="window-filter-btn active" data-window="all" style="color: #c9d1d9;">All</button>
+      </div>
+    </div>
+    <div id="console"></div>
+    <!-- REPL -->
+    <div id="repl-container">
+      <input type="text" id="repl-input" placeholder="Enter command or JavaScript... (Press Enter to execute)" />
+      <button class="repl-btn" id="repl-run">Run</button>
+    </div>
+  </div>
+
+  <!-- Performance Tab -->
+  <div id="panel-performance" class="tab-panel">
+    <div id="perf-content">
+      <div class="perf-section">
+        <h3>⚡ System Metrics</h3>
+        <div class="perf-grid">
+          <div class="perf-card">
+            <div class="perf-card-label">Heap Used</div>
+            <div class="perf-card-value" id="perf-heap-used">0<span class="perf-card-unit">MB</span></div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-card-label">Heap Total</div>
+            <div class="perf-card-value" id="perf-heap-total">0<span class="perf-card-unit">MB</span></div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-card-label">Heap Limit</div>
+            <div class="perf-card-value" id="perf-heap-limit">0<span class="perf-card-unit">MB</span></div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-card-label">Uptime</div>
+            <div class="perf-card-value" id="perf-uptime">0<span class="perf-card-unit">s</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="perf-section">
+        <h3>📡 IPC Statistics</h3>
+        <table class="ipc-table">
+          <thead>
+            <tr>
+              <th>Channel</th>
+              <th>Calls</th>
+              <th>Avg Time</th>
+              <th>Last Call</th>
+            </tr>
+          </thead>
+          <tbody id="ipc-stats-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: #8b949e; padding: 20px;">
+                No IPC calls recorded yet
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Tab -->
+  <div id="panel-state" class="tab-panel">
+    <div id="state-content">
+      <div class="state-section">
+        <div class="state-section-header" data-section="localStorage">
+          <h3>💾 localStorage</h3>
+          <span style="font-size: 11px; color: #8b949e;">Click to refresh</span>
+        </div>
+        <div class="state-section-content" id="state-localstorage">
+          <div class="empty-state">
+            <div class="empty-state-text">Click header to load localStorage data</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="state-section">
+        <div class="state-section-header" data-section="appConfig">
+          <h3>⚙️ App Configuration</h3>
+          <span style="font-size: 11px; color: #8b949e;">Click to refresh</span>
+        </div>
+        <div class="state-section-content" id="state-appconfig">
+          <div class="empty-state">
+            <div class="empty-state-text">Click header to load app config</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="state-section">
+        <div class="state-section-header" data-section="windowState">
+          <h3>🖼️ Window State</h3>
+          <span style="font-size: 11px; color: #8b949e;">Click to refresh</span>
+        </div>
+        <div class="state-section-content" id="state-window">
+          <div class="empty-state">
+            <div class="empty-state-text">Click header to load window state</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Network Tab -->
+  <div id="panel-network" class="tab-panel">
+    <div id="network-content">
+      <div id="network-toolbar">
+        <button class="window-filter-btn active" id="network-clear">🗑️ Clear</button>
+        <span style="font-size: 11px; color: #8b949e;" id="network-count">0 requests</span>
+      </div>
+      <div id="network-list">
+        <div class="empty-state">
+          <div class="empty-state-icon">🌐</div>
+          <div class="empty-state-text">No network requests captured</div>
+          <div class="empty-state-hint">Requests will appear here as they are made</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline Tab -->
+  <div id="panel-timeline" class="tab-panel">
+    <div id="timeline-content">
+      <div id="timeline-toolbar">
+        <button class="window-filter-btn active" id="timeline-clear">🗑️ Clear</button>
+        <span style="font-size: 11px; color: #8b949e;">Events timeline</span>
+      </div>
+      <div id="timeline-view">
+        <div class="empty-state">
+          <div class="empty-state-icon">📈</div>
+          <div class="empty-state-text">No timeline events recorded</div>
+          <div class="empty-state-hint">Events will be visualized here as they occur</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div id="stats">
+    <span>Total: <span class="count" id="totalCount">0</span></span>
+    <span>Visible: <span class="count" id="visibleCount">0</span></span>
+    <span>Errors: <span class="count" id="errorCount">0</span></span>
+    <span>Warnings: <span class="count" id="warnCount">0</span></span>
+    <div id="memoryInfo">
+      <span class="memory-stat">
+        <span>Heap:</span>
+        <span class="memory-value" id="heapUsed">0 MB</span>
+      </span>
+      <span class="memory-stat">
+        <span>Total:</span>
+        <span class="memory-value" id="heapTotal">0 MB</span>
+      </span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // DOM Elements
+    // ============================================
+    const consoleEl = document.getElementById('console');
+    const clearBtn = document.getElementById('clearBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const autoScrollBtn = document.getElementById('autoScrollBtn');
+    const searchBox = document.getElementById('searchBox');
+    const totalCountEl = document.getElementById('totalCount');
+    const visibleCountEl = document.getElementById('visibleCount');
+    const errorCountEl = document.getElementById('errorCount');
+    const warnCountEl = document.getElementById('warnCount');
+    const heapUsedEl = document.getElementById('heapUsed');
+    const heapTotalEl = document.getElementById('heapTotal');
+    const replInput = document.getElementById('repl-input');
+    const replRunBtn = document.getElementById('repl-run');
+
+    // ============================================
+    // State
+    // ============================================
+    let logs = [];
+    let totalCount = 0;
+    let errorCount = 0;
+    let warnCount = 0;
+    let autoScroll = true;
+    let searchQuery = '';
+    let activeWindowFilter = 'all';
+    let knownWindows = new Map();
+    let ipcStats = new Map();
+    let networkRequests = [];
+    let timelineEvents = [];
+    let levelFilters = {
+      info: true, success: true, warn: true, error: true,
+      debug: true, route: true, ipc: true, updater: true,
+      perf: true, network: true, state: true, lifecycle: true
+    };
+
+    // ============================================
+    // Tab Navigation
+    // ============================================
+    document.getElementById('tabs').addEventListener('click', (e) => {
+      if (e.target.classList.contains('tab-btn')) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+        e.target.classList.add('active');
+        const tabId = e.target.dataset.tab;
+        document.getElementById(`panel-${tabId}`).classList.add('active');
+      }
+    });
+
+    // ============================================
+    // Console Tab Functions
+    // ============================================
+
+    // Auto-scroll detection
+    consoleEl.addEventListener('scroll', () => {
+      const isAtBottom = consoleEl.scrollHeight - consoleEl.scrollTop <= consoleEl.clientHeight + 50;
+      if (autoScroll !== isAtBottom) {
+        autoScroll = isAtBottom;
+        updateAutoScrollButton();
+      }
+    });
+
+    autoScrollBtn.addEventListener('click', () => {
+      autoScroll = !autoScroll;
+      updateAutoScrollButton();
+      if (autoScroll) {
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      }
+    });
+
+    function updateAutoScrollButton() {
+      autoScrollBtn.classList.toggle('active', autoScroll);
+    }
+
+    // Search
+    searchBox.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase();
+      filterLogs();
+    });
+
+    // Level filters
+    ['info', 'success', 'warn', 'error', 'debug', 'route', 'ipc', 'updater', 'perf', 'network', 'state', 'lifecycle'].forEach(level => {
+      const checkbox = document.getElementById(`filter-${level}`);
+      checkbox.addEventListener('change', (e) => {
+        levelFilters[level] = e.target.checked;
+        filterLogs();
+      });
+    });
+
+    // Window filter
+    document.getElementById('windowFilters').addEventListener('click', (e) => {
+      if (e.target.classList.contains('window-filter-btn')) {
+        document.querySelectorAll('#windowFilters .window-filter-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        activeWindowFilter = e.target.dataset.window;
+        filterLogs();
+      }
+    });
+
+    function addWindowFilter(windowInfo) {
+      if (knownWindows.has(windowInfo.id)) return;
+      knownWindows.set(windowInfo.id, windowInfo);
+
+      const btn = document.createElement('button');
+      btn.className = 'window-filter-btn';
+      btn.dataset.window = windowInfo.id;
+      btn.style.color = windowInfo.color;
+      btn.textContent = windowInfo.name;
+      document.getElementById('windowFilters').appendChild(btn);
+    }
+
+    function filterLogs() {
+      let visibleCount = 0;
+      const entries = consoleEl.querySelectorAll('.log-entry');
+
+      entries.forEach((entry) => {
+        const level = entry.dataset.level;
+        const windowId = entry.dataset.windowId;
+        const text = entry.textContent.toLowerCase();
+
+        const matchesLevel = levelFilters[level];
+        const matchesSearch = searchQuery === '' || text.includes(searchQuery);
+        const matchesWindow = activeWindowFilter === 'all' || windowId === activeWindowFilter;
+
+        if (matchesLevel && matchesSearch && matchesWindow) {
+          entry.classList.add('visible');
+          entry.classList.toggle('highlight', searchQuery !== '');
+          visibleCount++;
+        } else {
+          entry.classList.remove('visible', 'highlight');
+        }
+      });
+
+      visibleCountEl.textContent = visibleCount;
+    }
+
+    function addLog(level, message, args, windowInfo) {
+      const timestamp = new Date().toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        fractionalSecondDigits: 3
+      });
+
+      if (windowInfo && windowInfo.id) {
+        addWindowFilter(windowInfo);
+      }
+
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${level}`;
+      entry.dataset.level = level;
+      entry.dataset.windowId = windowInfo ? String(windowInfo.id) : '0';
+
+      // Timestamp
+      const timestampSpan = document.createElement('span');
+      timestampSpan.className = 'timestamp';
+      timestampSpan.textContent = timestamp;
+      entry.appendChild(timestampSpan);
+
+      // Window badge
+      if (windowInfo) {
+        const windowBadge = document.createElement('span');
+        windowBadge.className = 'window-badge';
+        windowBadge.style.color = windowInfo.color;
+        windowBadge.textContent = windowInfo.name;
+        entry.appendChild(windowBadge);
+      }
+
+      // Level
+      const levelSpan = document.createElement('span');
+      levelSpan.className = 'level';
+      levelSpan.textContent = getLevelDisplay(level);
+      entry.appendChild(levelSpan);
+
+      // Message
+      const messageSpan = document.createElement('span');
+      messageSpan.className = 'message';
+      messageSpan.textContent = message;
+      if (args && args.length > 0) {
+        messageSpan.textContent += ' ' + args.map(arg =>
+          typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
+      }
+      entry.appendChild(messageSpan);
+
+      consoleEl.appendChild(entry);
+      logs.push({ timestamp, level, message, args, windowInfo, element: entry });
+
+      // Update stats
+      totalCount++;
+      if (level === 'error') errorCount++;
+      if (level === 'warn') warnCount++;
+
+      totalCountEl.textContent = totalCount;
+      errorCountEl.textContent = errorCount;
+      warnCountEl.textContent = warnCount;
+
+      // Apply filters
+      const matchesLevel = levelFilters[level];
+      const text = entry.textContent.toLowerCase();
+      const matchesSearch = searchQuery === '' || text.includes(searchQuery);
+      const matchesWindow = activeWindowFilter === 'all' || entry.dataset.windowId === activeWindowFilter;
+
+      if (matchesLevel && matchesSearch && matchesWindow) {
+        entry.classList.add('visible');
+        if (searchQuery !== '') entry.classList.add('highlight');
+        visibleCountEl.textContent = parseInt(visibleCountEl.textContent) + 1;
+      }
+
+      // Auto-scroll
+      if (autoScroll) {
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      }
+
+      // Limit logs
+      if (logs.length > 10000) {
+        const removed = logs.shift();
+        if (removed.element && removed.element.parentNode) {
+          removed.element.remove();
+        }
+        totalCount--;
+        totalCountEl.textContent = totalCount;
+      }
+
+      // Track IPC for performance tab
+      if (level === 'ipc') {
+        trackIPCCall(message);
+      }
+
+      // Add to timeline
+      addTimelineEvent(level, message, windowInfo);
+    }
+
+    function getLevelDisplay(level) {
+      const displays = {
+        info: 'ℹ️  INFO',
+        success: '✅ SUCCESS',
+        warn: '⚠️  WARN',
+        error: '❌ ERROR',
+        debug: '🔍 DEBUG',
+        route: '🧭 ROUTE',
+        ipc: '📡 IPC',
+        updater: '🔄 UPDATER',
+        perf: '⚡ PERF',
+        network: '🌐 NETWORK',
+        state: '📊 STATE',
+        lifecycle: '🔃 LIFECYCLE'
+      };
+      return displays[level] || level.toUpperCase();
+    }
+
+    // Clear logs
+    clearBtn.addEventListener('click', () => {
+      consoleEl.innerHTML = '';
+      logs = [];
+      totalCount = 0;
+      errorCount = 0;
+      warnCount = 0;
+      totalCountEl.textContent = '0';
+      visibleCountEl.textContent = '0';
+      errorCountEl.textContent = '0';
+      warnCountEl.textContent = '0';
+    });
+
+    // Export logs
+    exportBtn.addEventListener('click', () => {
+      const logText = logs.map(log => {
+        const windowName = log.windowInfo ? `[${log.windowInfo.name}]` : '[Main]';
+        return `[${log.timestamp}] ${windowName} [${log.level.toUpperCase()}] ${log.message}${log.args && log.args.length > 0 ? ' ' + log.args.join(' ') : ''}`;
+      }).join('\n');
+
+      const blob = new Blob([logText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `debug-log-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ============================================
+    // REPL / Command Palette
+    // ============================================
+    const BUILTIN_COMMANDS = {
+      'clear': () => { clearBtn.click(); return 'Console cleared'; },
+      'export': () => { exportBtn.click(); return 'Logs exported'; },
+      'help': () => `Available commands:
+  clear     - Clear the console
+  export    - Export logs to file
+  filter:X  - Toggle filter (e.g., filter:error)
+  scroll    - Toggle auto-scroll
+  stats     - Show log statistics
+  help      - Show this help`,
+      'scroll': () => { autoScrollBtn.click(); return `Auto-scroll: ${autoScroll}`; },
+      'stats': () => `Statistics:
+  Total logs: ${totalCount}
+  Errors: ${errorCount}
+  Warnings: ${warnCount}
+  Windows: ${knownWindows.size}`,
+    };
+
+    function executeREPL(input) {
+      const trimmed = input.trim();
+      if (!trimmed) return;
+
+      // Check for built-in commands
+      if (BUILTIN_COMMANDS[trimmed]) {
+        const result = BUILTIN_COMMANDS[trimmed]();
+        addLog('debug', `[REPL] ${result}`, []);
+        return;
+      }
+
+      // Check for filter toggle
+      if (trimmed.startsWith('filter:')) {
+        const level = trimmed.split(':')[1];
+        if (levelFilters.hasOwnProperty(level)) {
+          levelFilters[level] = !levelFilters[level];
+          const checkbox = document.getElementById(`filter-${level}`);
+          if (checkbox) checkbox.checked = levelFilters[level];
+          filterLogs();
+          addLog('debug', `[REPL] Filter ${level}: ${levelFilters[level]}`, []);
+        } else {
+          addLog('error', `[REPL] Unknown filter: ${level}`, []);
+        }
+        return;
+      }
+
+      // Execute as JavaScript
+      try {
+        const result = eval(trimmed);
+        addLog('success', `[REPL] => ${JSON.stringify(result)}`, []);
+      } catch (error) {
+        addLog('error', `[REPL] Error: ${error.message}`, []);
+      }
+    }
+
+    replInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        executeREPL(replInput.value);
+        replInput.value = '';
+      }
+    });
+
+    replRunBtn.addEventListener('click', () => {
+      executeREPL(replInput.value);
+      replInput.value = '';
+    });
+
+    // ============================================
+    // Performance Tab Functions
+    // ============================================
+    function updateMemoryInfo() {
+      if (performance && performance.memory) {
+        const used = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+        const total = (performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2);
+        const limit = (performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(0);
+
+        heapUsedEl.textContent = `${used} MB`;
+        heapTotalEl.textContent = `${total} MB`;
+
+        document.getElementById('perf-heap-used').innerHTML = `${used}<span class="perf-card-unit">MB</span>`;
+        document.getElementById('perf-heap-total').innerHTML = `${total}<span class="perf-card-unit">MB</span>`;
+        document.getElementById('perf-heap-limit').innerHTML = `${limit}<span class="perf-card-unit">MB</span>`;
+      }
+
+      const uptime = Math.floor(performance.now() / 1000);
+      document.getElementById('perf-uptime').innerHTML = `${uptime}<span class="perf-card-unit">s</span>`;
+    }
+
+    function trackIPCCall(message) {
+      // Extract channel name from message
+      const match = message.match(/\[([^\]]+)\]/) || message.match(/^(\S+)/);
+      const channel = match ? match[1] : 'unknown';
+
+      if (!ipcStats.has(channel)) {
+        ipcStats.set(channel, { calls: 0, totalTime: 0, lastCall: new Date() });
+      }
+
+      const stats = ipcStats.get(channel);
+      stats.calls++;
+      stats.lastCall = new Date();
+
+      updateIPCTable();
+    }
+
+    function updateIPCTable() {
+      const tbody = document.getElementById('ipc-stats-body');
+      if (ipcStats.size === 0) return;
+
+      tbody.innerHTML = '';
+      ipcStats.forEach((stats, channel) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${channel}</td>
+          <td>${stats.calls}</td>
+          <td>${stats.totalTime > 0 ? (stats.totalTime / stats.calls).toFixed(2) + 'ms' : '-'}</td>
+          <td>${stats.lastCall.toLocaleTimeString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ============================================
+    // State Tab Functions
+    // ============================================
+    document.querySelectorAll('.state-section-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const section = header.dataset.section;
+        loadStateSection(section);
+      });
+    });
+
+    function loadStateSection(section) {
+      switch (section) {
+        case 'localStorage':
+          loadLocalStorage();
+          break;
+        case 'appConfig':
+          loadAppConfig();
+          break;
+        case 'windowState':
+          loadWindowState();
+          break;
+      }
+    }
+
+    function loadLocalStorage() {
+      const container = document.getElementById('state-localstorage');
+      container.innerHTML = '';
+
+      if (localStorage.length === 0) {
+        container.innerHTML = '<div class="state-item"><span class="state-key">No items in localStorage</span></div>';
+        return;
+      }
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+
+        const item = document.createElement('div');
+        item.className = 'state-item';
+        item.innerHTML = `
+          <span class="state-key">${key}</span>
+          <span class="state-value" title="${value}">${value}</span>
+        `;
+        container.appendChild(item);
+      }
+    }
+
+    function loadAppConfig() {
+      const container = document.getElementById('state-appconfig');
+      container.innerHTML = '';
+
+      // Display known config values (from window if available)
+      const configItems = [
+        { key: 'Node Environment', value: 'renderer' },
+        { key: 'Platform', value: navigator.platform },
+        { key: 'User Agent', value: navigator.userAgent.split(' ').pop() },
+        { key: 'Language', value: navigator.language },
+        { key: 'Online', value: navigator.onLine ? 'Yes' : 'No' },
+        { key: 'Screen', value: `${screen.width}x${screen.height}` },
+        { key: 'Color Depth', value: `${screen.colorDepth}-bit` },
+      ];
+
+      configItems.forEach(({ key, value }) => {
+        const item = document.createElement('div');
+        item.className = 'state-item';
+        item.innerHTML = `
+          <span class="state-key">${key}</span>
+          <span class="state-value">${value}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function loadWindowState() {
+      const container = document.getElementById('state-window');
+      container.innerHTML = '';
+
+      const windowItems = [
+        { key: 'Inner Size', value: `${window.innerWidth}x${window.innerHeight}` },
+        { key: 'Outer Size', value: `${window.outerWidth}x${window.outerHeight}` },
+        { key: 'Screen Position', value: `${window.screenX}, ${window.screenY}` },
+        { key: 'Device Pixel Ratio', value: window.devicePixelRatio },
+        { key: 'Focused', value: document.hasFocus() ? 'Yes' : 'No' },
+        { key: 'Visibility', value: document.visibilityState },
+      ];
+
+      windowItems.forEach(({ key, value }) => {
+        const item = document.createElement('div');
+        item.className = 'state-item';
+        item.innerHTML = `
+          <span class="state-key">${key}</span>
+          <span class="state-value">${value}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // ============================================
+    // Network Tab Functions
+    // ============================================
+    document.getElementById('network-clear').addEventListener('click', () => {
+      networkRequests = [];
+      renderNetworkList();
+    });
+
+    function addNetworkRequest(request) {
+      // Check if request already exists (update it)
+      const existingIndex = networkRequests.findIndex(r => r.id === request.id);
+      if (existingIndex >= 0) {
+        networkRequests[existingIndex] = request;
+      } else {
+        networkRequests.push(request);
+      }
+      renderNetworkList();
+    }
+
+    function renderNetworkList() {
+      const container = document.getElementById('network-list');
+      document.getElementById('network-count').textContent = `${networkRequests.length} requests`;
+
+      if (networkRequests.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🌐</div>
+            <div class="empty-state-text">No network requests captured</div>
+            <div class="empty-state-hint">Requests will appear here as they are made</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      // Show newest first
+      [...networkRequests].reverse().forEach(req => {
+        const entry = document.createElement('div');
+        entry.className = 'network-entry';
+        const statusText = req.statusCode ? `[${req.statusCode}]` : (req.status === 'pending' ? '[...]' : '[ERR]');
+        entry.innerHTML = `
+          <span class="network-status ${req.status}"></span>
+          <span class="network-method ${req.method}">${req.method}</span>
+          <span class="network-status-code" style="color: ${req.statusCode >= 400 ? '#f85149' : req.statusCode ? '#3fb950' : '#d29922'}; width: 45px; flex-shrink: 0;">${statusText}</span>
+          <span class="network-url" title="${req.url}">${req.url}</span>
+          <span class="network-timing">${req.timing > 0 ? req.timing + 'ms' : '...'}</span>
+          <span class="network-size">${req.size > 0 ? formatSize(req.size) : '-'}</span>
+        `;
+        container.appendChild(entry);
+      });
+    }
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // ============================================
+    // Timeline Tab Functions
+    // ============================================
+    let timelineStartTime = performance.now();
+
+    document.getElementById('timeline-clear').addEventListener('click', () => {
+      timelineEvents = [];
+      timelineStartTime = performance.now();
+      renderTimeline();
+    });
+
+    function addTimelineEvent(level, message, windowInfo) {
+      const now = performance.now();
+      timelineEvents.push({
+        time: now - timelineStartTime,
+        level,
+        message: message.substring(0, 50),
+        window: windowInfo?.name || 'Main'
+      });
+
+      // Keep only last 100 events
+      if (timelineEvents.length > 100) {
+        timelineEvents.shift();
+      }
+
+      renderTimeline();
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline-view');
+
+      if (timelineEvents.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📈</div>
+            <div class="empty-state-text">No timeline events recorded</div>
+            <div class="empty-state-hint">Events will be visualized here as they occur</div>
+          </div>
+        `;
+        return;
+      }
+
+      const maxTime = Math.max(...timelineEvents.map(e => e.time), 1000);
+      container.innerHTML = '';
+
+      // Group events by type for better visualization
+      const last20 = timelineEvents.slice(-20);
+      last20.forEach(event => {
+        const row = document.createElement('div');
+        row.className = 'timeline-row';
+
+        const widthPercent = Math.min((event.time / maxTime) * 100, 100);
+        const levelClass = ['ipc', 'network', 'lifecycle', 'route'].includes(event.level) ? event.level : 'render';
+
+        row.innerHTML = `
+          <div class="timeline-label" title="${event.message}">${event.message}</div>
+          <div class="timeline-bar-container">
+            <div class="timeline-bar ${levelClass}" style="width: ${widthPercent}%">
+              ${Math.round(event.time)}ms
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // ============================================
+    // Memory & Initialization
+    // ============================================
+    setInterval(updateMemoryInfo, 2000);
+    updateMemoryInfo();
+
+    // Listen for log messages from main process
+    window.addEventListener('log', (event) => {
+      const { level, message, args, window: windowInfo } = event.detail;
+      addLog(level, message, args, windowInfo);
+    });
+
+    // Listen for network events
+    window.addEventListener('network', (event) => {
+      addNetworkRequest(event.detail);
+    });
+
+    // Initial state load
+    loadLocalStorage();
+    loadAppConfig();
+    loadWindowState();
+  </script>
+</body>
+</html>
