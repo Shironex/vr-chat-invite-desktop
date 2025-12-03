@@ -1,5 +1,0 @@
-# pnpm workspace configuration
-# Currently single package, but ready for monorepo if needed
-
-packages:
-  - '.'
