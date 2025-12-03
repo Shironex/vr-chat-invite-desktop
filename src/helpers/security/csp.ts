@@ -39,12 +39,13 @@ const CSP_POLICY = {
     "data:",
   ],
 
-  // Connect: allow self, localhost (for Vite HMR), and GitHub API (for changelog)
+  // Connect: allow self, localhost (for Vite HMR), GitHub API, and VRChat API
   "connect-src": [
     "'self'",
     "ws://localhost:*", // Vite HMR WebSocket
     "http://localhost:*", // Vite dev server
     "https://api.github.com", // GitHub API for changelog/releases
+    "https://api.vrchat.cloud", // VRChat API
   ],
 
   // Media: only allow self
@@ -115,6 +116,12 @@ export function preventExternalNavigation(): void {
 
       // Allow GitHub API for changelog/releases
       if (url.hostname === "api.github.com") {
+        callback({});
+        return;
+      }
+
+      // Allow VRChat API for authentication and invites
+      if (url.hostname === "api.vrchat.cloud") {
         callback({});
         return;
       }
