@@ -1,15 +1,15 @@
 {
-  "name": "electron-starter-template",
-  "productName": "Electron App",
-  "version": "0.1.0",
-  "description": "A modern Electron starter template with React 19, TypeScript, shadcn-ui, i18next, TanStack Router, and comprehensive tooling",
+  "name": "vrchat-group-inviter",
+  "productName": "VRChat Group Inviter",
+  "version": "1.0.0",
+  "description": "Desktop app that monitors VRChat log files and auto-invites detected players to a group",
   "main": "dist-electron/main.js",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "start": "vite",
-    "start:debug": "cross-env DEBUG=1 vite",
-    "start:debug:win": "set DEBUG=1 && vite",
+    "dev": "cross-env DEBUG=1 vite",
+    "dev:win": "set DEBUG=1 && vite",
     "build": "vite build",
     "dist": "vite build && electron-builder",
     "dist:dir": "vite build && electron-builder --dir",
@@ -30,8 +30,8 @@
     "url": "https://github.com/yourusername/your-repo.git"
   },
   "build": {
-    "appId": "com.yourcompany.yourapp",
-    "productName": "Electron App",
+    "appId": "com.vrchat.group-inviter",
+    "productName": "VRChat Group Inviter",
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -57,12 +57,12 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Electron App"
+      "shortcutName": "VRChat Group Inviter"
     },
     "publish": {
       "provider": "github",
       "owner": "yourusername",
-      "repo": "your-repo"
+      "repo": "vrchat-group-inviter"
     }
   },
   "devDependencies": {
@@ -78,6 +78,7 @@
     "@types/node": "^24.7.0",
     "@types/react": "^19.1.14",
     "@types/react-dom": "^19.1.9",
+    "@types/semver": "^7.7.1",
     "@vitejs/plugin-react": "^5.0.4",
     "babel-plugin-react-compiler": "^19.1.0-rc.1-rc-af1b7da-20250421",
     "cross-env": "^10.1.0",
@@ -123,13 +124,16 @@
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-router": "^1.132.41",
     "@tanstack/react-router-devtools": "^1.132.41",
+    "chokidar": "^3.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron-log": "^5.4.3",
+    "electron-store": "^8.2.0",
     "electron-updater": "^6.6.2",
     "electron-window-state": "^5.0.3",
     "i18next": "^25.5.2",
     "lucide-react": "^0.544.0",
+    "otplib": "^12.0.1",
     "path-browserify": "^1.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

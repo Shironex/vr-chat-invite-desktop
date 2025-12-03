@@ -14,35 +14,35 @@
  * Application Display Name
  * Used in: window titles, i18n translations, notifications
  */
-export const APP_NAME = "Electron App";
+export const APP_NAME = "VRChat Group Inviter";
 
 /**
  * Application ID (reverse domain notation)
  * Used in: Windows notifications (appUserModelId)
  * Should match package.json's build.appId
  */
-export const APP_ID = "com.yourcompany.yourapp";
+export const APP_ID = "com.vrchat.group-inviter";
 
 /**
  * Product Name (same as APP_NAME in most cases)
  * Should match package.json's productName
  */
-export const PRODUCT_NAME = "Electron App";
+export const PRODUCT_NAME = "VRChat Group Inviter";
 
 /**
  * Main Window Configuration
  */
 export const MAIN_WINDOW = {
-  title: "Electron App",
-  width: 1400,
-  height: 900,
+  title: "VRChat Group Inviter",
+  width: 1000,
+  height: 750,
 };
 
 /**
  * Debug Console Configuration
  */
 export const DEBUG_CONSOLE = {
-  title: "Electron App - Debug Console",
+  title: "VRChat Group Inviter - Debug Console",
   width: 1000,
   height: 600,
   backgroundColor: "#0d1117",
@@ -52,7 +52,7 @@ export const DEBUG_CONSOLE = {
  * HTML Page Title
  * Used in: index.html <title> tag
  */
-export const HTML_TITLE = "Electron Starter Template";
+export const HTML_TITLE = "VRChat Group Inviter";
 
 /**
  * GitHub Repository Configuration
@@ -61,7 +61,7 @@ export const HTML_TITLE = "Electron Starter Template";
  */
 export const GITHUB_CONFIG = {
   owner: "yourusername",
-  repo: "your-repo",
+  repo: "vrchat-group-inviter",
 };
 
 /**
