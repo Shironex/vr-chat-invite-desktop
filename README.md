@@ -1,425 +1,178 @@
-# Electron Starter Template
+# VRChat Group Inviter
 
-A modern, production-ready Electron application template with React 19, TypeScript, and comprehensive tooling.
+A desktop application for automatically inviting VRChat players to your group. Built with Electron, React 19, and TypeScript.
 
-## ✨ Features
+## Features
 
-### Core Stack
-- **Electron 38+** - Latest stable Electron with security best practices
-- **React 19** - With React Compiler for automatic optimization
-- **TypeScript** - Full type safety across main and renderer processes
-- **Vite** - Lightning-fast HMR and builds
-- **electron-builder** - Professional packaging and distribution
+### Core Functionality
+- **Automatic Player Detection** - Monitors VRChat log files in real-time to detect players joining your world
+- **Smart Invite Queue** - Automatically queues detected players for group invites
+- **Rate Limit Protection** - Configurable delays and batch sizes to avoid VRChat API limits
+- **Discord Notifications** - Send webhook notifications for invites, skips, and errors
 
-### UI & Styling
-- **shadcn-ui** - Beautiful, accessible components built on Radix UI
-- **Tailwind CSS 4** - Utility-first CSS with oklch color space
-- **Dark/Light/System Theme** - Persistent theme system with smooth transitions
-- **Custom Title Bar** - Cross-platform custom window controls
+### User Interface
+- **Clean Dashboard** - View stats, logs, and controls in one place
+- **Activity Log** - Real-time log with filtering and search
+- **Rate Limit Settings** - Configure invite timing to stay under VRChat limits
+- **VRChat Path Detection** - Auto-detect or manually select VRChat installation
 
-### Internationalization
-- **i18next** - Full i18n support with React integration
-- **Polish & English** - Pre-configured bilingual support (easily extensible)
-- **Persistent Language** - Language preference saved locally
+### Technical
+- **Secure Authentication** - Login with VRChat credentials, 2FA support (TOTP/Email)
+- **Session Persistence** - Stay logged in between app restarts
+- **Bilingual UI** - Polish and English translations
+- **Dark/Light Theme** - System theme support
 
-### Routing & State
-- **TanStack Router** - Type-safe file-based routing with memory history
-- **TanStack Query** - Powerful data fetching and caching (included, ready to use)
-
-### Developer Experience
-- **pnpm Package Manager** - Fast installs, auto peer deps, disk space efficient
-- **Debug Mode** - Separate debug console window with colored logs
-- **DevTools Extensions** - React DevTools auto-installed in development
-- **Hot Module Replacement** - Instant updates during development
-- **ESLint + Prettier** - Code quality and formatting
-- **React Compiler Plugin** - Automatic component optimization
-
-### Testing
-- **Vitest** - Fast unit testing with jsdom
-- **Playwright** - End-to-end testing for Electron apps
-- **Testing Library** - React component testing utilities
-- **V8 Coverage** - Detailed code coverage reports
-
-### Production Features
-- **Auto-Update with Custom UI** - Beautiful update dialog with release notes, download progress, and changelog history
-- **Code Signing Ready** - Configured for Windows/macOS signing
-- **NSIS Installer** - Professional Windows installer
-- **IPC Architecture** - Well-structured inter-process communication
-- **Error Handling** - Comprehensive error boundaries
-
-## 📦 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+ (20+ recommended)
-- pnpm 9+ (install with `npm install -g pnpm` or `corepack enable`)
+- pnpm 9+ (`npm install -g pnpm`)
+- VRChat account with group admin permissions
 
 ### Installation
 
 ```bash
-# Clone the template
-git clone https://github.com/yourusername/electron-starter-template.git
-cd electron-starter-template
+# Clone the repository
+git clone https://github.com/yourusername/vr-chat-invite-desktop.git
+cd vr-chat-invite-desktop
 
 # Install dependencies
 pnpm install
 
-# Start development server
+# Start in development mode
 pnpm start
 ```
 
-### Development
+### Configuration
+
+Before using, edit `src/config/vrchat.config.ts`:
+
+```typescript
+export const VRCHAT_GROUP = {
+  GROUP_ID: "grp_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", // Your group ID
+  GROUP_NAME: "Your Group Name",
+};
+
+export const DISCORD_WEBHOOKS = {
+  SUCCESS: "https://discord.com/api/webhooks/...", // Optional
+  WARNING: "https://discord.com/api/webhooks/...", // Optional
+  ERROR: "https://discord.com/api/webhooks/...",   // Optional
+};
+```
+
+## Usage
+
+1. **Login** - Enter your VRChat username and password
+2. **Verify 2FA** - If enabled, enter your authenticator or email code
+3. **Start Monitoring** - Click "Start Monitoring" to watch for player joins
+4. **Launch VRChat** - Optionally launch VRChat from the app
+5. **Watch the Magic** - Players joining your world are automatically invited
+
+### Rate Limit Settings
+
+Access via the sliders icon in the dashboard:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Batch Size | 8 | Invites before pausing |
+| Batch Delay | 12s | Pause duration after batch |
+| Delay Between | 2s | Wait between invites |
+| Queue Threshold | 88 | Pause if queue exceeds |
+| Pause Duration | 600s | How long to pause at threshold |
+
+## Development
 
 ```bash
 # Start with hot reload
 pnpm start
 
 # Start with debug console
-pnpm run start:debug
+pnpm run dev
 
-# Run tests
-pnpm test
-
-# Lint code
+# Run linter
 pnpm run lint
 
-# Format code
-pnpm run format:write
+# Type check
+pnpm exec tsc --noEmit
 ```
 
-### Building
+## Building
 
 ```bash
-# Build for development (no installer)
+# Build without installer (for testing)
 pnpm run dist:dir
 
 # Build with NSIS installer
 pnpm run dist
-
-# Build and publish to GitHub Releases
-pnpm run publish
 ```
 
-## 🏗️ Project Structure
+Output goes to `release/` directory.
+
+## Project Structure
 
 ```
-electron-starter-template/
-├── src/
-│   ├── main.ts                      # Electron main process
-│   ├── preload.ts                   # Preload script
-│   ├── renderer.ts                  # Renderer entry point
-│   ├── App.tsx                      # React root component
-│   ├── types.d.ts                   # TypeScript declarations
-│   │
-│   ├── assets/                      # Static assets
-│   │   ├── fonts/                   # Geist, Tomorrow fonts
-│   │   └── icon.ico                 # App icon
-│   │
-│   ├── components/                  # React components
-│   │   ├── ui/                      # shadcn-ui components
-│   │   ├── DragWindowRegion.tsx     # Custom title bar
-│   │   ├── Navbar.tsx               # Navigation
-│   │   ├── SettingsModal.tsx        # Settings UI
-│   │   ├── ToggleTheme.tsx          # Theme switcher
-│   │   ├── LangToggle.tsx           # Language switcher
-│   │   ├── UpdateDialog.tsx         # Auto-update notification UI
-│   │   └── ChangelogHistoryDialog.tsx # GitHub releases viewer
-│   │
-│   ├── config/                      # Configuration
-│   │   └── app.config.ts            # Centralized app metadata
-│   │
-│   ├── helpers/                     # Helper functions
-│   │   ├── ipc/                     # IPC infrastructure
-│   │   │   ├── theme/               # Theme IPC
-│   │   │   ├── window/              # Window controls IPC
-│   │   │   ├── debug/               # Debug logging IPC
-│   │   │   ├── updater/             # Auto-updater IPC
-│   │   │   ├── context-exposer.ts   # Context aggregator
-│   │   │   └── listeners-register.ts # Listener aggregator
-│   │   │
-│   │   ├── updater/                 # Auto-updater core
-│   │   │   └── auto-updater.ts      # electron-updater setup
-│   │   │
-│   │   ├── debug-mode.ts            # Debug system (main)
-│   │   ├── debug-logger.ts          # Debug logger (renderer)
-│   │   ├── theme_helpers.ts         # Theme utilities
-│   │   ├── language_helpers.ts      # i18n utilities
-│   │   └── window_helpers.ts        # Window utilities
-│   │
-│   ├── layouts/                     # Layout components
-│   │   └── BaseLayout.tsx           # Main layout
-│   │
-│   ├── localization/                # i18n configuration
-│   │   ├── i18n.ts                  # i18next setup
-│   │   ├── language.ts              # Language utilities
-│   │   └── langs.ts                 # Available languages
-│   │
-│   ├── routes/                      # TanStack Router routes
-│   │   ├── __root.tsx               # Root layout
-│   │   └── index.tsx                # Home page
-│   │
-│   ├── styles/                      # Global styles
-│   │   └── global.css               # Tailwind + theme vars
-│   │
-│   ├── tests/                       # Test files
-│   │   ├── unit/                    # Vitest tests
-│   │   └── e2e/                     # Playwright tests
-│   │
-│   ├── utils/                       # Utility functions
-│   │   ├── tailwind.ts              # Tailwind utilities
-│   │   ├── routes.ts                # Router setup
-│   │   └── platform.ts              # Platform detection
-│   │
-│   ├── debug-console.html           # Debug console UI
-│   └── debug-console-preload.ts     # Debug console preload
+src/
+├── components/inviter/     # UI components
+│   ├── InviterDashboard    # Main dashboard
+│   ├── LoginForm           # Authentication
+│   ├── InviterLogs         # Activity log
+│   └── RateLimitSettings   # Settings form
 │
-├── index.html                       # HTML entry point
-├── vite.config.mts                  # Vite configuration
-├── vitest.config.ts                 # Vitest configuration
-├── playwright.config.ts             # Playwright configuration
-├── tsconfig.json                    # TypeScript configuration
-├── eslint.config.mjs                # ESLint configuration
-├── components.json                  # shadcn-ui configuration
-├── package.json                     # Project metadata
+├── helpers/vrchat/         # VRChat services
+│   ├── vrchat-auth         # Authentication
+│   ├── vrchat-api          # API calls
+│   ├── log-monitor         # Log file watching
+│   ├── invite-queue        # Queue management
+│   └── discord-webhook     # Discord notifications
 │
-├── docs/                            # Documentation
-│   └── CHANGELOG.md                 # Example release notes format
+├── helpers/ipc/vrchat/     # IPC layer
+│   ├── vrchat-channels     # Channel constants
+│   ├── vrchat-context      # Renderer bridge
+│   └── vrchat-listeners    # Main handlers
 │
-├── README.md                        # This file
-└── TEMPLATE_SETUP.md                # Customization guide
+├── config/
+│   └── vrchat.config.ts    # Group and webhook config
+│
+└── localization/
+    └── i18n.ts             # Polish/English translations
 ```
 
-## 🎨 Customization
+## Security
 
-See [TEMPLATE_SETUP.md](./TEMPLATE_SETUP.md) for a comprehensive guide on customizing this template for your project.
+- Credentials are only sent to VRChat's official API
+- Session cookies stored securely in app data
+- No data sent to third parties (except optional Discord webhooks)
+- Open source - audit the code yourself
 
-### Quick Customization Steps
+## Troubleshooting
 
-1. **Update App Config**: Edit `src/config/app.config.ts` with your app name, titles, and IDs (single source of truth!)
-2. **Update package.json**: Match the values from app.config.ts for productName, appId, etc.
-3. **Replace Icon**: Put your icon in `src/assets/icon.ico`
-4. **Add Routes**: Create new files in `src/routes/`
-5. **Customize Theme**: Modify colors in `src/styles/global.css`
+### Login fails
+- Check your username and password
+- Ensure 2FA is being handled correctly
+- VRChat may have temporary API issues
 
-## 🔧 IPC Communication Pattern
+### Players not detected
+- Make sure VRChat is running
+- Monitoring must be started before players join
+- Check the VRChat path is correctly configured
 
-This template uses a structured IPC pattern:
+### Invites failing
+- Verify your group ID is correct
+- Ensure you have invite permissions in the group
+- Check rate limit settings aren't too aggressive
 
-```
-src/helpers/ipc/
-└── feature/
-    ├── feature-channels.ts    # Channel name constants
-    ├── feature-context.ts     # contextBridge exposure
-    └── feature-listeners.ts   # ipcMain handlers
-```
+## License
 
-To add a new IPC feature, see the [IPC section in TEMPLATE_SETUP.md](./TEMPLATE_SETUP.md#5-add-custom-ipc-channels).
+MIT License - see [LICENSE](./LICENSE) for details.
 
-## 🐛 Debug Mode
+## Credits
 
-Enable powerful debugging features:
+Built with:
+- [Electron](https://electronjs.org) - Desktop framework
+- [React 19](https://react.dev) - UI framework
+- [TypeScript](https://typescriptlang.org) - Type safety
+- [shadcn/ui](https://ui.shadcn.com) - UI components
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [chokidar](https://github.com/paulmillr/chokidar) - File watching
 
-```bash
-# Development
-pnpm run start:debug
-
-# Production
-your-app.exe --debug
-```
-
-**Features:**
-- Separate debug console window
-- Colored, categorized logs
-- Auto-open DevTools
-- Persistent debug logs
-
-## 🔄 Auto-Update System
-
-This template includes a sophisticated auto-update system with a custom UI that shows release notes, download progress, and a changelog history viewer.
-
-### Features
-
-- **Custom Update Dialog** - Beautiful UI with release notes in Markdown
-- **User-Controlled Downloads** - User decides when to download (not automatic)
-- **Download Progress** - Real-time progress bar with speed and ETA
-- **Changelog History** - Button in navbar to browse all GitHub releases
-- **Multi-format Support** - Renders both Markdown and HTML release notes
-
-### Configuration
-
-Update `src/config/app.config.ts` with your GitHub repository:
-
-```typescript
-export const GITHUB_CONFIG = {
-  owner: "yourusername",
-  repo: "your-repo",
-};
-```
-
-Also update `package.json` build.publish section:
-
-```json
-"publish": {
-  "provider": "github",
-  "owner": "yourusername",
-  "repo": "your-repo"
-}
-```
-
-### Testing the Update UI
-
-In development mode, you can simulate the update flow using DevTools console:
-
-```javascript
-// Show update available dialog with mock release notes
-window.updaterAPI._testShowUpdate()
-
-// Simulate full download flow (progress bar + completion)
-window.updaterAPI._testSimulateDownload()
-```
-
-This allows you to test and style the update UI without publishing actual releases.
-
-### Update Flow
-
-1. **Check for Updates** - Automatic check 3 seconds after launch, then hourly
-2. **Update Available** - Dialog appears with version info and release notes
-3. **Download** - User clicks "Download", progress bar shows status
-4. **Install** - After download, user can install now or later (installs on quit)
-
-### Writing Release Notes
-
-Create release notes in Markdown format when publishing GitHub releases. The system supports:
-
-- Headers (`#`, `##`, `###`)
-- Lists (bulleted and numbered)
-- Code blocks and inline code
-- Bold, italic, and links
-- All standard Markdown syntax
-
-See [docs/CHANGELOG.md](./docs/CHANGELOG.md) for an example format.
-
-## 🧪 Testing
-
-```bash
-# Unit tests (Vitest)
-pnpm test                  # Run once
-pnpm run test:watch        # Watch mode
-
-# E2E tests (Playwright)
-pnpm run dist:dir          # Build first
-pnpm run test:e2e          # Run E2E tests
-
-# All tests
-pnpm run test:all
-```
-
-## 📦 Building & Distribution
-
-### Development Build
-
-```bash
-pnpm run dist:dir
-```
-
-Outputs to `release/` without creating installer (fast for testing).
-
-### Production Build
-
-```bash
-pnpm run dist
-```
-
-Creates NSIS installer in `release/`.
-
-### Publishing to GitHub Releases
-
-```bash
-# Set GitHub token
-export GH_TOKEN=your_github_token
-
-# Build and publish
-pnpm run publish
-```
-
-Auto-updater will use GitHub Releases to distribute updates.
-
-## 🔐 Security
-
-- **Context Isolation**: Enabled by default
-- **Node Integration**: Limited to preload scripts
-- **CSP**: Content Security Policy configured
-- **contextBridge**: All APIs exposed via secure bridge
-- **No Remote Module**: Modern IPC patterns only
-
-## 🌐 Browser Support
-
-- **Chromium** (Electron's engine)
-- React 19 features enabled
-- Modern JavaScript (ES2022+)
-- No polyfills needed
-
-## 📝 Scripts Reference
-
-| Script | Description |
-|--------|-------------|
-| `pnpm start` | Start development server |
-| `pnpm run start:debug` | Start with debug console |
-| `pnpm run build` | Build for production (no packaging) |
-| `pnpm run dist:dir` | Build and package (no installer) |
-| `pnpm run dist` | Build with installer |
-| `pnpm run publish` | Build and publish to GitHub |
-| `pnpm test` | Run unit tests once |
-| `pnpm run test:watch` | Run tests in watch mode |
-| `pnpm run test:e2e` | Run E2E tests |
-| `pnpm run test:all` | Run all tests |
-| `pnpm run lint` | Lint code |
-| `pnpm run format` | Check formatting |
-| `pnpm run format:write` | Format code |
-
-## 🤝 Contributing
-
-This is a template repository. Feel free to:
-- Fork and modify for your needs
-- Submit issues for bugs or improvements
-- Share your projects built with this template
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-Built with these amazing technologies:
-- [Electron](https://electronjs.org)
-- [React](https://react.dev)
-- [TypeScript](https://www.typescriptlang.org)
-- [Vite](https://vitejs.dev)
-- [shadcn-ui](https://ui.shadcn.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [TanStack Router](https://tanstack.com/router)
-- [i18next](https://i18next.com)
-- [Vitest](https://vitest.dev)
-- [Playwright](https://playwright.dev)
-
-## 📦 Package Manager
-
-This template uses **pnpm** for better performance and peer dependency handling. See [PNPM_MIGRATION.md](./PNPM_MIGRATION.md) for details on why and how to use it.
-
-**Benefits:**
-- ⚡ 2-3x faster installs
-- 💾 50% less disk space
-- 🔧 Auto-installs peer dependencies (no more `--force`!)
-- 🏗️ Monorepo-ready with workspaces
-
-## 📞 Support
-
-- Report bugs via [GitHub Issues](https://github.com/yourusername/electron-starter-template/issues)
-- Read [TEMPLATE_SETUP.md](./TEMPLATE_SETUP.md) for detailed guidance
-- Read [PNPM_MIGRATION.md](./PNPM_MIGRATION.md) for pnpm details
-- Check [Electron docs](https://electronjs.org/docs) for framework questions
-
----
-
-**Ready to build something amazing? Start customizing!** 🚀
-
-See [TEMPLATE_SETUP.md](./TEMPLATE_SETUP.md) for your next steps.
+Based on the [Electron Starter Template](https://github.com/example/electron-starter-template).
