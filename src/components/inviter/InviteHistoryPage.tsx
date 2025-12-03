@@ -250,13 +250,13 @@ export function InviteHistoryPage({ className }: { className?: string }) {
   return (
     <div className={cn("flex h-full flex-col overflow-hidden p-4", className)}>
       {/* Header with Stats */}
-      <div className="mb-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <History className="h-6 w-6 text-primary" />
+      <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-primary shrink-0" />
             <div>
-              <h1 className="text-xl font-bold">{t("historyTitle")}</h1>
-              <p className="text-muted-foreground text-sm">{t("historyDescription")}</p>
+              <h1 className="text-lg font-bold">{t("historyTitle")}</h1>
+              <p className="text-muted-foreground text-xs hidden sm:block">{t("historyDescription")}</p>
             </div>
           </div>
 
@@ -267,13 +267,14 @@ export function InviteHistoryPage({ className }: { className?: string }) {
               size="sm"
               onClick={handleExport}
               disabled={exporting || total === 0}
+              title={t("historyExport")}
             >
               {exporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="h-4 w-4" />
               )}
-              {exporting ? t("historyExporting") : t("historyExport")}
+              <span className="hidden sm:inline ml-2">{exporting ? t("historyExporting") : t("historyExport")}</span>
             </Button>
             <Button
               variant="outline"
@@ -281,55 +282,56 @@ export function InviteHistoryPage({ className }: { className?: string }) {
               onClick={() => setShowClearDialog(true)}
               disabled={clearing || total === 0}
               className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              title={t("historyClear")}
             >
               {clearing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
               )}
-              {clearing ? t("historyClearing") : t("historyClear")}
+              <span className="hidden sm:inline ml-2">{clearing ? t("historyClearing") : t("historyClear")}</span>
             </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-4 gap-3">
-            <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
-              <Users className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-muted-foreground text-xs">{t("historyStatsTotal")}</p>
-                <p className="text-lg font-bold tabular-nums">{stats.total}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="bg-card flex items-center gap-2 rounded-lg border p-2 sm:p-3">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{t("historyStatsTotal")}</p>
+                <p className="text-base sm:text-lg font-bold tabular-nums">{stats.total}</p>
               </div>
             </div>
-            <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-muted-foreground text-xs">{t("historyStatsSuccessRate")}</p>
-                <p className="text-lg font-bold tabular-nums">{successRate}%</p>
+            <div className="bg-card flex items-center gap-2 rounded-lg border p-2 sm:p-3">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{t("historyStatsSuccessRate")}</p>
+                <p className="text-base sm:text-lg font-bold tabular-nums">{successRate}%</p>
               </div>
             </div>
-            <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
-              <Clock className="h-5 w-5 text-purple-500" />
-              <div>
-                <p className="text-muted-foreground text-xs">{t("historyStatsLastInvite")}</p>
-                <p className="text-lg font-bold tabular-nums">
+            <div className="bg-card flex items-center gap-2 rounded-lg border p-2 sm:p-3">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs truncate">{t("historyStatsLastInvite")}</p>
+                <p className="text-base sm:text-lg font-bold tabular-nums truncate">
                   {stats.lastInviteAt ? formatRelativeTime(stats.lastInviteAt, t) : t("historyStatsNever")}
                 </p>
               </div>
             </div>
-            <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
-              <Info className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-muted-foreground text-xs">{t("historyRetention")}</p>
+            <div className="bg-card flex items-center gap-2 rounded-lg border p-2 sm:p-3">
+              <Info className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] sm:text-xs">{t("historyRetention")}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={t("historySearch")}
@@ -342,8 +344,8 @@ export function InviteHistoryPage({ className }: { className?: string }) {
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as InviteStatus | "all")}
           >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
+            <SelectTrigger className="w-[110px] sm:w-[140px]">
+              <Filter className="mr-1 sm:mr-2 h-4 w-4 shrink-0" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -359,11 +361,11 @@ export function InviteHistoryPage({ className }: { className?: string }) {
       {/* History Table */}
       <div className="flex min-h-0 flex-1 flex-col rounded-lg border">
         {/* Table Header */}
-        <div className="bg-muted/50 grid grid-cols-[120px_1fr_100px_1fr] gap-4 border-b px-4 py-2 text-xs font-medium">
+        <div className="bg-muted/50 grid grid-cols-[80px_1fr_80px] sm:grid-cols-[100px_1fr_90px_1fr] gap-2 sm:gap-4 border-b px-2 sm:px-4 py-2 text-xs font-medium">
           <div>{t("historyColumnTime")}</div>
           <div>{t("historyColumnUser")}</div>
           <div>{t("historyColumnStatus")}</div>
-          <div>{t("historyColumnMessage")}</div>
+          <div className="hidden sm:block">{t("historyColumnMessage")}</div>
         </div>
 
         {/* Table Body */}
@@ -383,21 +385,21 @@ export function InviteHistoryPage({ className }: { className?: string }) {
               {entries.map((entry) => (
                 <div
                   key={entry.id}
-                  className="hover:bg-muted/50 grid grid-cols-[120px_1fr_100px_1fr] gap-4 px-4 py-3 text-sm transition-colors"
+                  className="hover:bg-muted/50 grid grid-cols-[80px_1fr_80px] sm:grid-cols-[100px_1fr_90px_1fr] gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm transition-colors"
                 >
-                  <div className="text-muted-foreground tabular-nums">
+                  <div className="text-muted-foreground tabular-nums text-[11px] sm:text-sm">
                     {formatDateTime(entry.timestamp, locale)}
                   </div>
                   <div className="truncate font-medium" title={entry.userId}>
                     {entry.displayName}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     {getStatusIcon(entry.result)}
-                    <span className={getStatusColor(entry.result)}>
+                    <span className={cn(getStatusColor(entry.result), "truncate")}>
                       {t(getStatusTranslationKey(entry.result))}
                     </span>
                   </div>
-                  <div className="text-muted-foreground truncate" title={entry.message}>
+                  <div className="text-muted-foreground truncate hidden sm:block" title={entry.message}>
                     {entry.message}
                   </div>
                 </div>

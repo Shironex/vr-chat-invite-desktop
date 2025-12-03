@@ -6,7 +6,7 @@ import SettingsModal from "./SettingsModal";
 import { ChangelogHistoryDialog } from "./ChangelogHistoryDialog";
 import { NetworkStatusIcon } from "./OfflineIndicator";
 import { UserAvatarDropdown } from "./inviter/UserAvatarDropdown";
-import { Home, History, Circle } from "lucide-react";
+import { Home, History, Circle, BarChart3 } from "lucide-react";
 import { debugLog } from "@/helpers/debug-logger";
 import { cn } from "@/utils/tailwind";
 
@@ -84,19 +84,34 @@ export default function Navbar() {
           <Link to="/">
             <Button
               variant={isActive("/") ? "default" : "ghost"}
+              size="sm"
               className="gap-2"
+              title={t("navHome")}
             >
-              <Home className="h-4 w-4" />
-              {t("navHome")}
+              <Home className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t("navHome")}</span>
+            </Button>
+          </Link>
+          <Link to="/statistics">
+            <Button
+              variant={isActive("/statistics") ? "default" : "ghost"}
+              size="sm"
+              className="gap-2"
+              title={t("navStatistics")}
+            >
+              <BarChart3 className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t("navStatistics")}</span>
             </Button>
           </Link>
           <Link to="/history">
             <Button
               variant={isActive("/history") ? "default" : "ghost"}
+              size="sm"
               className="gap-2"
+              title={t("navHistory")}
             >
-              <History className="h-4 w-4" />
-              {t("navHistory")}
+              <History className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t("navHistory")}</span>
             </Button>
           </Link>
         </div>

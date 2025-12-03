@@ -235,6 +235,47 @@ interface TraySettings {
   showDesktopNotifications: boolean;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Session Statistics Types
+// ─────────────────────────────────────────────────────────────────
+
+interface TimeBucket {
+  startTime: number;
+  playerCount: number;
+  invitesSent: number;
+  invitesSkipped: number;
+  invitesError: number;
+}
+
+interface SessionData {
+  id: string;
+  startTime: number;
+  endTime?: number;
+  isActive: boolean;
+  uniquePlayerIds: string[];
+  totalPlayersDetected: number;
+  totalInvitesSent: number;
+  totalInvitesSkipped: number;
+  totalInvitesError: number;
+  timeBuckets: TimeBucket[];
+}
+
+interface SessionStatsQueryOptions {
+  limit?: number;
+  includeActive?: boolean;
+}
+
+interface PeakHourData {
+  hour: number;
+  avgPlayers: number;
+}
+
+interface SessionStatsResponse {
+  sessions: SessionData[];
+  activeSession?: SessionData;
+  peakHours: PeakHourData[];
+}
+
 interface TrayAPI {
   getSettings: () => Promise<TraySettings>;
   setSettings: (settings: Partial<TraySettings>) => Promise<TraySettings>;
@@ -288,6 +329,11 @@ interface VRChatAPI {
   exportHistoryCSV: () => Promise<InviteHistoryExportResult>;
   clearHistory: () => Promise<void>;
 
+  // Session Statistics
+  getSessionStats: (options?: SessionStatsQueryOptions) => Promise<SessionStatsResponse>;
+  getActiveSession: () => Promise<SessionData | null>;
+  clearSessionStats: () => Promise<void>;
+
   // Log Buffer
   getLogBuffer: () => Promise<InviterLogEntry[]>;
   clearLogBuffer: () => Promise<void>;
@@ -302,6 +348,7 @@ interface VRChatAPI {
   onQueueUpdated: (callback: (queue: InviteRequest[]) => void) => () => void;
   onLogEntry: (callback: (entry: InviterLogEntry) => void) => () => void;
   onProcessStatusChanged: (callback: (isRunning: boolean) => void) => () => void;
+  onSessionStatsUpdated: (callback: (session: SessionData | null) => void) => () => void;
 }
 
 declare interface Window {

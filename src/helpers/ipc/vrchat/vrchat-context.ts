@@ -21,6 +21,9 @@ import type {
   InviteHistoryResponse,
   InviteHistoryStats,
   InviteHistoryExportResult,
+  SessionData,
+  SessionStatsQueryOptions,
+  SessionStatsResponse,
 } from "../../vrchat/vrchat-types";
 
 export function exposeVRChatContext() {
@@ -236,6 +239,28 @@ export function exposeVRChatContext() {
       ipcRenderer.invoke(VRCHAT_CHANNELS.HISTORY_CLEAR),
 
     // ─────────────────────────────────────────────────────────────────
+    // Session Statistics
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get session statistics
+     */
+    getSessionStats: (options?: SessionStatsQueryOptions): Promise<SessionStatsResponse> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.SESSION_STATS_GET, options),
+
+    /**
+     * Get current active session
+     */
+    getActiveSession: (): Promise<SessionData | null> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.SESSION_STATS_GET_ACTIVE),
+
+    /**
+     * Clear all session statistics
+     */
+    clearSessionStats: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.SESSION_STATS_CLEAR),
+
+    // ─────────────────────────────────────────────────────────────────
     // Log Buffer
     // ─────────────────────────────────────────────────────────────────
 
@@ -369,6 +394,18 @@ export function exposeVRChatContext() {
       ipcRenderer.on(VRCHAT_CHANNELS.PROCESS_STATUS_CHANGED, handler);
       return () => {
         ipcRenderer.removeListener(VRCHAT_CHANNELS.PROCESS_STATUS_CHANGED, handler);
+      };
+    },
+
+    /**
+     * Listen for session stats updates
+     */
+    onSessionStatsUpdated: (callback: (session: SessionData | null) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, session: SessionData | null) =>
+        callback(session);
+      ipcRenderer.on(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, handler);
       };
     },
   });

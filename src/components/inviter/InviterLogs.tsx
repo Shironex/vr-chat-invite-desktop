@@ -115,9 +115,9 @@ export function InviterLogs({ logs, maxLogs = 500, className }: InviterLogsProps
   return (
     <div className={cn("flex min-h-0 flex-col rounded-lg border", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-2 sm:px-3 py-2">
         <div className="flex items-center gap-2">
-          <Terminal className="h-4 w-4" />
+          <Terminal className="h-4 w-4 shrink-0" />
           <span className="text-sm font-medium">{t("logTitle")}</span>
           <span className="text-muted-foreground text-xs">({logs.length})</span>
         </div>
@@ -126,8 +126,8 @@ export function InviterLogs({ logs, maxLogs = 500, className }: InviterLogsProps
         <div className="flex items-center gap-2">
           {/* Filter */}
           <Select value={filter} onValueChange={(v) => setFilter(v as LogType | "all")}>
-            <SelectTrigger className="h-8 w-[130px]">
-              <Filter className="mr-1 h-3 w-3" />
+            <SelectTrigger className="h-8 w-[100px] sm:w-[130px]">
+              <Filter className="mr-1 h-3 w-3 shrink-0" />
               <SelectValue placeholder={t("logFilterAll")} />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +150,7 @@ export function InviterLogs({ logs, maxLogs = 500, className }: InviterLogsProps
               placeholder={t("logSearchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 w-[150px] pl-7"
+              className="h-8 w-[100px] sm:w-[150px] pl-7"
             />
           </div>
 

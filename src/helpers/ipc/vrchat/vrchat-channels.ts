@@ -68,6 +68,12 @@ export const VRCHAT_CHANNELS = {
   HISTORY_GET_STATS: "vrchat:history:getStats",
   HISTORY_EXPORT_CSV: "vrchat:history:exportCSV",
   HISTORY_CLEAR: "vrchat:history:clear",
+
+  // Session Statistics
+  SESSION_STATS_GET: "vrchat:session:getStats",
+  SESSION_STATS_GET_ACTIVE: "vrchat:session:getActive",
+  SESSION_STATS_CLEAR: "vrchat:session:clear",
+  SESSION_STATS_UPDATED: "vrchat:session:updated",
 } as const;
 
 export type VRChatChannel =

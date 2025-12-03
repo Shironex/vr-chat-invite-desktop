@@ -20,15 +20,15 @@ function StatCard({ icon, label, value, color, className }: StatCardProps) {
   return (
     <div
       className={cn(
-        "bg-muted/50 hover:bg-muted flex flex-1 flex-col items-center gap-1 rounded-lg p-3 transition-colors",
+        "bg-muted/50 hover:bg-muted flex flex-col items-center gap-1 rounded-lg p-2 sm:p-3 transition-colors",
         className
       )}
     >
-      <div className={cn("flex items-center gap-1.5 text-xs", color)}>
+      <div className={cn("flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs", color)}>
         {icon}
-        <span>{label}</span>
+        <span className="truncate">{label}</span>
       </div>
-      <span className="text-2xl font-bold tabular-nums">{value}</span>
+      <span className="text-xl sm:text-2xl font-bold tabular-nums">{value}</span>
     </div>
   );
 }
@@ -51,7 +51,7 @@ export function InviterStatsBar({
   const { t } = useTranslation();
 
   return (
-    <div className={cn("flex gap-3", className)}>
+    <div className={cn("grid grid-cols-4 gap-2 sm:gap-3", className)}>
       <StatCard
         icon={<CheckCircle2 className="h-4 w-4" />}
         label={t("statsSent")}

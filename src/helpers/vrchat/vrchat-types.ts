@@ -268,3 +268,59 @@ export interface TraySettings {
   minimizeToTray: boolean; // Default: true
   showDesktopNotifications: boolean; // Default: true
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Session Statistics Types
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * 15-minute time bucket for activity tracking
+ */
+export interface TimeBucket {
+  startTime: number; // Start of 15-min window (timestamp)
+  playerCount: number; // Players detected in this bucket
+  invitesSent: number;
+  invitesSkipped: number;
+  invitesError: number;
+}
+
+/**
+ * A monitoring session with statistics
+ */
+export interface SessionData {
+  id: string; // Unique session ID (timestamp-based)
+  startTime: number; // When monitoring started
+  endTime?: number; // When monitoring stopped (undefined if active)
+  isActive: boolean; // Currently active session?
+  uniquePlayerIds: string[]; // Array of unique user IDs detected
+  totalPlayersDetected: number;
+  totalInvitesSent: number;
+  totalInvitesSkipped: number;
+  totalInvitesError: number;
+  timeBuckets: TimeBucket[];
+}
+
+/**
+ * Query options for session stats
+ */
+export interface SessionStatsQueryOptions {
+  limit?: number;
+  includeActive?: boolean;
+}
+
+/**
+ * Peak hour analysis data
+ */
+export interface PeakHourData {
+  hour: number; // 0-23
+  avgPlayers: number;
+}
+
+/**
+ * Session statistics response
+ */
+export interface SessionStatsResponse {
+  sessions: SessionData[];
+  activeSession?: SessionData;
+  peakHours: PeakHourData[];
+}

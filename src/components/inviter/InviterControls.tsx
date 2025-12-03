@@ -36,7 +36,7 @@ export function InviterControls({
   const { t } = useTranslation();
 
   return (
-    <div className={cn("flex gap-3", className)}>
+    <div className={cn("flex gap-2 sm:gap-3", className)}>
       {/* Monitor Button */}
       {isMonitoring ? (
         <Button
@@ -47,13 +47,13 @@ export function InviterControls({
         >
           {isStopping ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("controlStopping")}
+              <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+              <span className="hidden sm:inline">{t("controlStopping")}</span>
             </>
           ) : (
             <>
-              <Square className="mr-2 h-4 w-4" />
-              {t("controlStop")}
+              <Square className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("controlStop")}</span>
             </>
           )}
         </Button>
@@ -66,13 +66,13 @@ export function InviterControls({
         >
           {isStarting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("controlStarting")}
+              <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+              <span className="hidden sm:inline">{t("controlStarting")}</span>
             </>
           ) : (
             <>
-              <Play className="mr-2 h-4 w-4" />
-              {t("controlStart")}
+              <Play className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("controlStart")}</span>
             </>
           )}
         </Button>
@@ -93,16 +93,17 @@ export function InviterControls({
         variant="outline"
         onClick={onLaunchVRChat}
         disabled={isLaunching || isVRChatRunning}
+        title={t("controlLaunch")}
       >
         {isLaunching ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t("controlLaunching")}
+            <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+            <span className="hidden sm:inline">{t("controlLaunching")}</span>
           </>
         ) : (
           <>
-            <Gamepad2 className="mr-2 h-4 w-4" />
-            {t("controlLaunch")}
+            <Gamepad2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t("controlLaunch")}</span>
           </>
         )}
       </Button>

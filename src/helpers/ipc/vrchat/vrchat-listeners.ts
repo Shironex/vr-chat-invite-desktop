@@ -12,6 +12,7 @@ import { VRChatApiService } from "../../vrchat/vrchat-api.service";
 import { LogMonitorService } from "../../vrchat/log-monitor.service";
 import { InviteQueueService } from "../../vrchat/invite-queue.service";
 import { InviteHistoryService } from "../../vrchat/invite-history.service";
+import { SessionStatsService } from "../../vrchat/session-stats.service";
 import { LogBufferService } from "../../vrchat/log-buffer.service";
 import { ProcessDetectionService } from "../../vrchat/process-detection.service";
 import { launchVRChat } from "../../vrchat/vrchat-launcher";
@@ -29,6 +30,7 @@ import type {
   InviterLogEntry,
   InviteHistoryQueryOptions,
   InviteHistoryExportResult,
+  SessionStatsQueryOptions,
 } from "../../vrchat/vrchat-types";
 
 let mainWindow: BrowserWindow | null = null;
@@ -128,9 +130,16 @@ export function registerVRChatListeners(window: BrowserWindow) {
   ipcMain.handle(VRCHAT_CHANNELS.MONITOR_START, async (): Promise<boolean> => {
     debugLog.ipc("MONITOR_START called");
 
+    // Start a new session for statistics tracking
+    SessionStatsService.startSession();
+
     // Callback for when player is detected
     const onPlayerJoin = (player: DetectedPlayer) => {
       debugLog.info(`Player detected: ${player.displayName} (${player.userId})`);
+
+      // Record in session stats
+      SessionStatsService.recordPlayerDetected(player);
+
       // Emit to renderer
       sendToRenderer(VRCHAT_CHANNELS.MONITOR_PLAYER_DETECTED, player);
       // Also emit a log entry with translation key
@@ -145,6 +154,9 @@ export function registerVRChatListeners(window: BrowserWindow) {
       };
       LogBufferService.add(playerLogEntry);
       sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, playerLogEntry);
+
+      // Emit session stats updated event
+      sendToRenderer(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, SessionStatsService.getActiveSession());
 
       // Add to invite queue automatically
       const added = InviteQueueService.add(player.userId, player.displayName);
@@ -176,6 +188,10 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
   ipcMain.handle(VRCHAT_CHANNELS.MONITOR_STOP, async (): Promise<void> => {
     debugLog.ipc("MONITOR_STOP called");
+
+    // End the current session for statistics tracking
+    SessionStatsService.endSession();
+
     await LogMonitorService.stop();
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
     // Update tray state and show notification
@@ -198,6 +214,10 @@ export function registerVRChatListeners(window: BrowserWindow) {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_RESULT, result);
       // Also save to persistent history
       InviteHistoryService.addEntry(result);
+      // Record in session stats
+      SessionStatsService.recordInviteResult(result);
+      // Emit session stats updated event
+      sendToRenderer(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, SessionStatsService.getActiveSession());
       // Desktop notifications
       if (result.result === "success") {
         TrayNotificationService.showInviteSuccess(result.displayName);
@@ -445,13 +465,43 @@ export function registerVRChatListeners(window: BrowserWindow) {
     InviteHistoryService.clearHistory();
   });
 
-  // Initialize history service (cleanup old entries)
+  // ─────────────────────────────────────────────────────────────────
+  // Session Statistics Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.SESSION_STATS_GET,
+    async (_event, options?: SessionStatsQueryOptions) => {
+      debugLog.ipc(`SESSION_STATS_GET called with options: ${JSON.stringify(options)}`);
+      return SessionStatsService.getSessions(options);
+    }
+  );
+
+  ipcMain.handle(VRCHAT_CHANNELS.SESSION_STATS_GET_ACTIVE, async () => {
+    debugLog.ipc("SESSION_STATS_GET_ACTIVE called");
+    return SessionStatsService.getActiveSession();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.SESSION_STATS_CLEAR, async (): Promise<void> => {
+    debugLog.ipc("SESSION_STATS_CLEAR called");
+    SessionStatsService.clearSessions();
+  });
+
+  // Initialize services (cleanup old entries)
   InviteHistoryService.initialize();
+  SessionStatsService.initialize();
 
   // Set up tray service callbacks for context menu actions
   TrayService.onStartMonitoring = async () => {
     debugLog.info("Tray: Start monitoring requested");
+
+    // Start a new session for statistics tracking
+    SessionStatsService.startSession();
+
     const onPlayerJoin = (player: DetectedPlayer) => {
+      // Record in session stats
+      SessionStatsService.recordPlayerDetected(player);
+
       sendToRenderer(VRCHAT_CHANNELS.MONITOR_PLAYER_DETECTED, player);
       const playerLogEntry: InviterLogEntry = {
         type: "detect",
@@ -464,6 +514,10 @@ export function registerVRChatListeners(window: BrowserWindow) {
       };
       LogBufferService.add(playerLogEntry);
       sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, playerLogEntry);
+
+      // Emit session stats updated event
+      sendToRenderer(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, SessionStatsService.getActiveSession());
+
       InviteQueueService.add(player.userId, player.displayName);
     };
 
@@ -478,6 +532,10 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
   TrayService.onStopMonitoring = async () => {
     debugLog.info("Tray: Stop monitoring requested");
+
+    // End the current session for statistics tracking
+    SessionStatsService.endSession();
+
     await LogMonitorService.stop();
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
     TrayService.setMonitoringState(false);
