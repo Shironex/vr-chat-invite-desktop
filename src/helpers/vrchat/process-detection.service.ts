@@ -13,8 +13,9 @@ type ProcessStatusCallback = (isRunning: boolean) => void;
 
 class ProcessDetectionServiceClass {
   private isVRChatRunning = false;
+  private isInitialized = false;
   private checkInterval: NodeJS.Timeout | null = null;
-  private callbacks: Set<ProcessStatusCallback> = new Set();
+  private callback: ProcessStatusCallback | null = null;
 
   /**
    * Check if VRChat process is currently running
@@ -40,21 +41,20 @@ class ProcessDetectionServiceClass {
   }
 
   /**
-   * Update the running status and notify callbacks if changed
+   * Update the running status and notify callback if changed
    */
   private updateStatus(isRunning: boolean): void {
-    if (this.isVRChatRunning !== isRunning) {
-      this.isVRChatRunning = isRunning;
-      debugLog.info(`VRChat process status changed: ${isRunning ? "running" : "not running"}`);
+    const statusChanged = this.isVRChatRunning !== isRunning;
+    this.isVRChatRunning = isRunning;
 
-      // Notify all callbacks
-      this.callbacks.forEach((callback) => {
-        try {
-          callback(isRunning);
-        } catch (error) {
-          debugLog.error(`Callback error: ${error}`);
-        }
-      });
+    // Only notify on actual changes after initialization
+    if (statusChanged && this.isInitialized && this.callback) {
+      debugLog.info(`VRChat process status changed: ${isRunning ? "running" : "not running"}`);
+      try {
+        this.callback(isRunning);
+      } catch (error) {
+        debugLog.error(`Callback error: ${error}`);
+      }
     }
   }
 
@@ -62,8 +62,9 @@ class ProcessDetectionServiceClass {
    * Start periodic checking for VRChat process
    */
   startWatching(callback?: ProcessStatusCallback): void {
+    // Set callback (overwrites any previous)
     if (callback) {
-      this.callbacks.add(callback);
+      this.callback = callback;
     }
 
     // Don't start multiple intervals
@@ -73,8 +74,10 @@ class ProcessDetectionServiceClass {
 
     debugLog.info("Starting VRChat process watcher");
 
-    // Do an immediate check
-    this.checkVRChatRunning();
+    // Do an immediate check, then mark as initialized
+    this.checkVRChatRunning().then(() => {
+      this.isInitialized = true;
+    });
 
     // Then check periodically
     this.checkInterval = setInterval(() => {
@@ -94,20 +97,10 @@ class ProcessDetectionServiceClass {
   }
 
   /**
-   * Add a callback to be notified when VRChat status changes
+   * Set callback to be notified when VRChat status changes
    */
-  onStatusChange(callback: ProcessStatusCallback): () => void {
-    this.callbacks.add(callback);
-    return () => {
-      this.callbacks.delete(callback);
-    };
-  }
-
-  /**
-   * Remove a status change callback
-   */
-  removeCallback(callback: ProcessStatusCallback): void {
-    this.callbacks.delete(callback);
+  setCallback(callback: ProcessStatusCallback | null): void {
+    this.callback = callback;
   }
 
   /**

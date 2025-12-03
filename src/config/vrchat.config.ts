@@ -108,8 +108,8 @@ export const MONITOR_CONFIG = {
 
   // Regex patterns for detecting players
   PATTERNS: {
-    // Player join pattern - captures display name
-    JOIN: /\[Behaviour\] OnPlayerJoined\s+(.+)/,
+    // Player join pattern - captures display name (stops before user ID in parentheses)
+    JOIN: /\[Behaviour\] OnPlayerJoined\s+(.+?)\s*\(usr_/,
 
     // User ID pattern - usr_[uuid]
     USER_ID: /usr_[a-f0-9-]+/i,

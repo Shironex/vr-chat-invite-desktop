@@ -282,7 +282,16 @@ class InviteQueueServiceClass {
 
       if (response.skipped) {
         debugLog.info(`Skipped ${displayName}: ${response.message}`);
-        this.emitLog("skip", `Skipped ${displayName}: ${response.message}`, userId, displayName, "logSkipped", { name: displayName, reason: response.message });
+        // Use specific translation key for "already invited or member"
+        const isAlreadyMember = response.message.toLowerCase().includes("already");
+        this.emitLog(
+          "skip",
+          `Skipped ${displayName}: ${response.message}`,
+          userId,
+          displayName,
+          isAlreadyMember ? "logSkippedAlreadyMember" : "logSkipped",
+          isAlreadyMember ? { name: displayName } : { name: displayName, reason: response.message }
+        );
         discordWebhook.sendSkipped(userId, displayName, response.message);
 
         return {

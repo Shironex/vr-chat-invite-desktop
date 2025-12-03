@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import SettingsModal from "./SettingsModal";
 import { ChangelogHistoryDialog } from "./ChangelogHistoryDialog";
+import { NetworkStatusIcon } from "./OfflineIndicator";
 import { Home, History } from "lucide-react";
 import { debugLog } from "@/helpers/debug-logger";
 
@@ -24,12 +25,6 @@ export default function Navbar() {
       <div className="flex items-center justify-between px-4 py-2">
         {/* Left: Brand */}
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">
-              {t("appName")}
-            </span>
-          </Link>
-
           {/* Navigation Links */}
           <div className="flex items-center gap-1">
             <Link to="/">
@@ -53,8 +48,9 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right: Changelog & Settings */}
-        <div className="flex items-center gap-1">
+        {/* Right: Network Status, Changelog & Settings */}
+        <div className="flex items-center gap-2">
+          <NetworkStatusIcon />
           <ChangelogHistoryDialog />
           <SettingsModal />
         </div>

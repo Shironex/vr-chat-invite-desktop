@@ -9,7 +9,7 @@ i18n.use(initReactI18next).init({
       translation: {
         appName: APP_NAME,
         // Navbar
-        navHome: "Strona główna",
+        navHome: "Zapraszanie",
         settings: "Ustawienia",
         // Settings Modal
         settingsTitle: "Ustawienia aplikacji",
@@ -223,6 +223,7 @@ i18n.use(initReactI18next).init({
         logInviteSent: "Zaproszenie wysłane do {{name}}",
         logInviteSkipped: "Pominięto {{name}}: {{reason}}",
         logSkipped: "Pominięto {{name}}: {{reason}}",
+        logSkippedAlreadyMember: "Pominięto {{name}}: już zaproszony lub członek grupy",
         logInviteError: "Błąd zaproszenia {{name}}: {{error}}",
         logError: "Błąd: {{error}}",
         logAlreadyMember: "już jest członkiem grupy",
@@ -248,7 +249,7 @@ i18n.use(initReactI18next).init({
       translation: {
         appName: APP_NAME,
         // Navbar
-        navHome: "Home",
+        navHome: "Inviting",
         settings: "Settings",
         // Settings Modal
         settingsTitle: "Application Settings",
@@ -462,6 +463,7 @@ i18n.use(initReactI18next).init({
         logInviteSent: "Invite sent to {{name}}",
         logInviteSkipped: "Skipped {{name}}: {{reason}}",
         logSkipped: "Skipped {{name}}: {{reason}}",
+        logSkippedAlreadyMember: "Skipped {{name}}: already invited or member",
         logInviteError: "Invite error {{name}}: {{error}}",
         logError: "Error: {{error}}",
         logAlreadyMember: "already a group member",
