@@ -4,7 +4,7 @@
  */
 
 import { useTranslation } from "react-i18next";
-import { Play, Square, Gamepad2, Loader2, Circle } from "lucide-react";
+import { Play, Square, Gamepad2, Loader2, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/tailwind";
 
@@ -17,6 +17,7 @@ interface InviterControlsProps {
   onStartMonitoring: () => void;
   onStopMonitoring: () => void;
   onLaunchVRChat: () => void;
+  onOpenSettings: () => void;
   className?: string;
 }
 
@@ -29,6 +30,7 @@ export function InviterControls({
   onStartMonitoring,
   onStopMonitoring,
   onLaunchVRChat,
+  onOpenSettings,
   className,
 }: InviterControlsProps) {
   const { t } = useTranslation();
@@ -76,6 +78,16 @@ export function InviterControls({
         </Button>
       )}
 
+      {/* Rate Limit Settings Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onOpenSettings}
+        title={t("settingsRateLimitTitle")}
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+      </Button>
+
       {/* Launch VRChat Button */}
       <Button
         variant="outline"
@@ -94,27 +106,6 @@ export function InviterControls({
           </>
         )}
       </Button>
-
-      {/* VRChat Status Indicator */}
-      <div
-        className={cn(
-          "flex items-center gap-2 rounded-md border px-3 py-2 text-sm",
-          isVRChatRunning
-            ? "border-green-500/50 bg-green-500/10 text-green-500"
-            : "border-muted text-muted-foreground"
-        )}
-        title={isVRChatRunning ? t("statusVRChatRunning") : t("statusVRChatNotRunning")}
-      >
-        <Circle
-          className={cn(
-            "h-2 w-2",
-            isVRChatRunning ? "fill-green-500 text-green-500" : "fill-muted-foreground text-muted-foreground"
-          )}
-        />
-        <span className="hidden sm:inline">
-          {isVRChatRunning ? t("statusVRChatRunning") : t("statusVRChatNotRunning")}
-        </span>
-      </div>
     </div>
   );
 }

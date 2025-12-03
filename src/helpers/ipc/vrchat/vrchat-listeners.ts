@@ -17,6 +17,8 @@ import { ProcessDetectionService } from "../../vrchat/process-detection.service"
 import { launchVRChat } from "../../vrchat/vrchat-launcher";
 import { SettingsService } from "../../vrchat/settings.service";
 import { discordWebhook } from "../../vrchat/discord-webhook.service";
+import { TrayService } from "../../tray/tray.service";
+import { TrayNotificationService } from "../../tray/tray-notification.service";
 import type {
   VRChatAuthState,
   VRChatLoginCredentials,
@@ -164,6 +166,9 @@ export function registerVRChatListeners(window: BrowserWindow) {
       LogBufferService.add(monitorStartLog);
       sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, monitorStartLog);
       discordWebhook.sendMonitorStarted();
+      // Update tray state and show notification
+      TrayService.setMonitoringState(true);
+      TrayNotificationService.showMonitoringStarted();
     }
 
     return started;
@@ -173,6 +178,9 @@ export function registerVRChatListeners(window: BrowserWindow) {
     debugLog.ipc("MONITOR_STOP called");
     await LogMonitorService.stop();
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
+    // Update tray state and show notification
+    TrayService.setMonitoringState(false);
+    TrayNotificationService.showMonitoringStopped();
   });
 
   ipcMain.handle(VRCHAT_CHANNELS.MONITOR_GET_STATUS, async () => {
@@ -190,6 +198,12 @@ export function registerVRChatListeners(window: BrowserWindow) {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_RESULT, result);
       // Also save to persistent history
       InviteHistoryService.addEntry(result);
+      // Desktop notifications
+      if (result.result === "success") {
+        TrayNotificationService.showInviteSuccess(result.displayName);
+      } else if (result.result === "error") {
+        TrayNotificationService.showInviteError(result.displayName, result.message);
+      }
     },
     onStatsUpdate: (stats) => {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_STATS_UPDATED, stats);
@@ -433,6 +447,42 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
   // Initialize history service (cleanup old entries)
   InviteHistoryService.initialize();
+
+  // Set up tray service callbacks for context menu actions
+  TrayService.onStartMonitoring = async () => {
+    debugLog.info("Tray: Start monitoring requested");
+    const onPlayerJoin = (player: DetectedPlayer) => {
+      sendToRenderer(VRCHAT_CHANNELS.MONITOR_PLAYER_DETECTED, player);
+      const playerLogEntry: InviterLogEntry = {
+        type: "detect",
+        message: `Player joined: ${player.displayName} (${player.userId})`,
+        timestamp: player.timestamp,
+        userId: player.userId,
+        displayName: player.displayName,
+        i18nKey: "logPlayerJoined",
+        i18nParams: { name: `${player.displayName} (${player.userId})` },
+      };
+      LogBufferService.add(playerLogEntry);
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, playerLogEntry);
+      InviteQueueService.add(player.userId, player.displayName);
+    };
+
+    const started = await LogMonitorService.start(onPlayerJoin);
+    sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
+    if (started) {
+      TrayService.setMonitoringState(true);
+      TrayNotificationService.showMonitoringStarted();
+      discordWebhook.sendMonitorStarted();
+    }
+  };
+
+  TrayService.onStopMonitoring = async () => {
+    debugLog.info("Tray: Stop monitoring requested");
+    await LogMonitorService.stop();
+    sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
+    TrayService.setMonitoringState(false);
+    TrayNotificationService.showMonitoringStopped();
+  };
 
   debugLog.success("VRChat IPC listeners registered");
 }

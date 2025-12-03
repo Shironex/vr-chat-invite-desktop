@@ -8,10 +8,12 @@ import * as fs from "fs";
 import * as path from "path";
 import { debugLog } from "../debug-mode";
 import { DEFAULT_RATE_LIMITS } from "../../config/vrchat.config";
-import type { RateLimitSettings } from "./vrchat-types";
+import { TRAY_CONFIG } from "../../config/app.config";
+import type { RateLimitSettings, TraySettings } from "./vrchat-types";
 
 const SETTINGS_KEY = "rate-limit-settings";
 const VRCHAT_PATH_KEY = "vrchat-path";
+const TRAY_SETTINGS_KEY = "tray-settings";
 
 // Settings store
 const store = new Store({
@@ -140,6 +142,49 @@ class SettingsServiceClass {
   clearVRChatPath(): void {
     store.delete(VRCHAT_PATH_KEY);
     debugLog.info("VRChat path cleared, will auto-detect");
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Tray Settings
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Get current tray settings
+   */
+  getTraySettings(): TraySettings {
+    const saved = store.get(TRAY_SETTINGS_KEY) as Partial<TraySettings> | undefined;
+
+    // Merge with defaults to ensure all fields exist
+    const settings: TraySettings = {
+      minimizeToTray: saved?.minimizeToTray ?? TRAY_CONFIG.defaults.minimizeToTray,
+      showDesktopNotifications:
+        saved?.showDesktopNotifications ?? TRAY_CONFIG.defaults.showDesktopNotifications,
+    };
+
+    return settings;
+  }
+
+  /**
+   * Update tray settings
+   */
+  setTraySettings(partial: Partial<TraySettings>): void {
+    const current = this.getTraySettings();
+    const updated: TraySettings = {
+      ...current,
+      ...partial,
+    };
+
+    store.set(TRAY_SETTINGS_KEY, updated);
+    debugLog.info(`Tray settings updated: ${JSON.stringify(updated)}`);
+  }
+
+  /**
+   * Reset tray settings to defaults
+   */
+  resetTraySettings(): TraySettings {
+    store.delete(TRAY_SETTINGS_KEY);
+    debugLog.info("Tray settings reset to defaults");
+    return { ...TRAY_CONFIG.defaults };
   }
 }
 

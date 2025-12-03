@@ -65,6 +65,16 @@ export const GITHUB_CONFIG = {
 };
 
 /**
+ * System Tray Configuration
+ */
+export const TRAY_CONFIG = {
+  defaults: {
+    minimizeToTray: true,
+    showDesktopNotifications: true,
+  },
+};
+
+/**
  * Combined App Configuration
  * Provides a single export for all app settings
  */
@@ -76,4 +86,5 @@ export const APP_CONFIG = {
   debugConsole: DEBUG_CONSOLE,
   htmlTitle: HTML_TITLE,
   github: GITHUB_CONFIG,
+  tray: TRAY_CONFIG,
 };

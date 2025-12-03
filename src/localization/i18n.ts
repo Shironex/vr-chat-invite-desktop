@@ -165,7 +165,7 @@ i18n.use(initReactI18next).init({
         settingsResetFailed: "Nie udało się przywrócić: {{error}}",
         // VRChat Path Settings
         pathTitle: "Ścieżka VRChat",
-        pathDescription: "Skonfiguruj lokalizację pliku wykonywalnego VRChat, aby móc uruchomić grę.",
+        pathDescription: "Skonfiguruj lokalizację pliku exe VRChat, aby móc uruchomić program automatycznie.",
         pathFound: "VRChat znaleziony",
         pathNotConfigured: "Ścieżka VRChat nie skonfigurowana",
         pathAutoDetect: "Wykryj automatycznie",
@@ -243,6 +243,12 @@ i18n.use(initReactI18next).init({
         msgVRChatNotRunning: "VRChat nie jest uruchomiony. Uruchom VRChat przed rozpoczęciem monitorowania.",
         statusVRChatRunning: "VRChat uruchomiony",
         statusVRChatNotRunning: "VRChat wyłączony",
+        // System Tray
+        trayTitle: "Zasobnik systemowy",
+        trayMinimizeToTray: "Minimalizuj do zasobnika przy zamykaniu",
+        trayMinimizeToTrayHint: "Aplikacja będzie działać w tle po zamknięciu okna",
+        trayShowNotifications: "Pokaż powiadomienia systemowe",
+        trayShowNotificationsHint: "Wyświetlaj powiadomienia o zaproszeniach i błędach",
       },
     },
     en: {
@@ -483,6 +489,12 @@ i18n.use(initReactI18next).init({
         msgVRChatNotRunning: "VRChat is not running. Please start VRChat before starting monitoring.",
         statusVRChatRunning: "VRChat running",
         statusVRChatNotRunning: "VRChat not running",
+        // System Tray
+        trayTitle: "System Tray",
+        trayMinimizeToTray: "Minimize to tray on close",
+        trayMinimizeToTrayHint: "App will continue running in background when closed",
+        trayShowNotifications: "Show desktop notifications",
+        trayShowNotificationsHint: "Display notifications for invites and errors",
       },
     },
   },

@@ -77,6 +77,7 @@ export interface VRChatSession {
   twoFactorAuthCookie?: string;
   userId: string;
   displayName: string;
+  avatarUrl?: string;
   expiresAt: number; // timestamp
 }
 
@@ -87,6 +88,7 @@ export interface VRChatAuthState {
   isAuthenticated: boolean;
   userId?: string;
   displayName?: string;
+  avatarUrl?: string;
   requiresTwoFactor?: boolean;
   twoFactorMethods?: string[];
 }
@@ -253,4 +255,16 @@ export interface InviteHistoryExportResult {
   success: boolean;
   path?: string;
   error?: string;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Tray Settings Types
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * System tray settings (user configurable)
+ */
+export interface TraySettings {
+  minimizeToTray: boolean; // Default: true
+  showDesktopNotifications: boolean; // Default: true
 }

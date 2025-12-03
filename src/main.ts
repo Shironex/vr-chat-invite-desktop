@@ -7,6 +7,7 @@ import { applyContentSecurityPolicy, preventExternalNavigation } from "./helpers
 import { validateEnvironment, getDevServerUrl, isDevelopment } from "./helpers/env-validation";
 import { APP_NAME, APP_ID, MAIN_WINDOW } from "./config/app.config";
 import { windowRegistry } from "./helpers/window-registry";
+import { TrayService } from "./helpers/tray/tray.service";
 import path from "path";
 
 // Validate environment variables early
@@ -16,6 +17,7 @@ const inDevelopment = isDevelopment();
 
 // Initialize debug mode early
 const debugMode = initializeDebugMode();
+
 
 // Set app name for notifications and taskbar
 app.setName(APP_NAME);
@@ -37,7 +39,7 @@ function createWindow() {
   debugLog.info(`Window state: ${windowState.width}x${windowState.height} at (${windowState.x}, ${windowState.y})${windowState.isMaximized ? ' [maximized]' : ''}`);
 
   const preload = path.join(__dirname, "preload.js");
-  const mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     x: windowState.x,
     y: windowState.y,
     width: windowState.width,
@@ -57,15 +59,18 @@ function createWindow() {
   });
 
   // Register window state management
-  windowState.manage(mainWindow);
+  windowState.manage(window);
 
   // Register window in registry for debug console
-  windowRegistry.register(mainWindow, "Main");
+  windowRegistry.register(window, "Main");
 
-  registerListeners(mainWindow);
+  registerListeners(window);
+
+  // Initialize system tray
+  TrayService.initialize(window);
 
   // Prevent navigation to external URLs (additional layer of protection)
-  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+  window.webContents.on('will-navigate', (event, navigationUrl) => {
     const url = new URL(navigationUrl);
 
     // Allow localhost for development
@@ -88,16 +93,16 @@ function createWindow() {
   const devServerUrl = getDevServerUrl();
   if (devServerUrl) {
     debugLog.info(`Loading from dev server: ${devServerUrl}`);
-    mainWindow.loadURL(devServerUrl);
+    window.loadURL(devServerUrl);
   } else {
     const indexPath = path.join(__dirname, "../dist/index.html");
     debugLog.info(`Loading from file: ${indexPath}`);
-    mainWindow.loadFile(indexPath);
+    window.loadFile(indexPath);
   }
 
   // Open DevTools automatically in debug mode
   if (debugMode) {
-    mainWindow.webContents.openDevTools();
+    window.webContents.openDevTools();
     debugLog.success("DevTools opened automatically (debug mode)");
   }
 
@@ -146,16 +151,23 @@ app
     }
   });
 
-//osX only
+// Handle window-all-closed event
+// Note: When minimized to tray, window is hidden, not closed
+// This event only fires when window.close() is actually called
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
+// macOS: Re-create window when dock icon is clicked
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
-//osX only ends
+
+// Clean up tray on quit
+app.on("before-quit", () => {
+  TrayService.destroy();
+});

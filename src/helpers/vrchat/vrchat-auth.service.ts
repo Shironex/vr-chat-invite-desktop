@@ -30,6 +30,7 @@ class VRChatAuthServiceClass {
   private twoFactorAuthCookie: string | null = null;
   private userId: string | null = null;
   private displayName: string | null = null;
+  private avatarUrl: string | null = null;
   private sessionExpiresAt: number | null = null;
   private pendingTwoFactorMethods: string[] = [];
   private validationInterval: ReturnType<typeof setInterval> | null = null;
@@ -62,6 +63,7 @@ class VRChatAuthServiceClass {
       this.twoFactorAuthCookie = session.twoFactorAuthCookie || null;
       this.userId = session.userId;
       this.displayName = session.displayName;
+      this.avatarUrl = session.avatarUrl || null;
       this.sessionExpiresAt = session.expiresAt;
 
       debugLog.success(`Session loaded for ${this.displayName}`);
@@ -85,6 +87,7 @@ class VRChatAuthServiceClass {
       twoFactorAuthCookie: this.twoFactorAuthCookie || undefined,
       userId: this.userId,
       displayName: this.displayName,
+      avatarUrl: this.avatarUrl || undefined,
       expiresAt: this.sessionExpiresAt || Date.now() + SESSION_CONFIG.SESSION_DURATION,
     };
 
@@ -100,6 +103,7 @@ class VRChatAuthServiceClass {
     this.twoFactorAuthCookie = null;
     this.userId = null;
     this.displayName = null;
+    this.avatarUrl = null;
     this.sessionExpiresAt = null;
     this.pendingTwoFactorMethods = [];
     store.delete(SESSION_CONFIG.STORAGE_KEY);
@@ -201,6 +205,14 @@ class VRChatAuthServiceClass {
   }
 
   /**
+   * Extract best avatar URL from user data
+   * Priority: profilePicOverride > userIcon > currentAvatarThumbnailImageUrl
+   */
+  private extractAvatarUrl(userData: VRChatCurrentUser): string | null {
+    return userData.profilePicOverride || userData.userIcon || userData.currentAvatarThumbnailImageUrl || null;
+  }
+
+  /**
    * Extract cookies from response headers
    */
   private extractCookies(cookies: string[]): void {
@@ -274,6 +286,7 @@ class VRChatAuthServiceClass {
       if ("id" in userData && "displayName" in userData) {
         this.userId = userData.id;
         this.displayName = userData.displayName;
+        this.avatarUrl = this.extractAvatarUrl(userData as VRChatCurrentUser);
         this.sessionExpiresAt = Date.now() + SESSION_CONFIG.SESSION_DURATION;
         this.saveSession();
         this.startValidationInterval();
@@ -284,6 +297,7 @@ class VRChatAuthServiceClass {
           isAuthenticated: true,
           userId: this.userId,
           displayName: this.displayName,
+          avatarUrl: this.avatarUrl || undefined,
         };
       }
 
@@ -327,6 +341,7 @@ class VRChatAuthServiceClass {
       if (userResponse.status === 200 && "id" in userResponse.data) {
         this.userId = userResponse.data.id;
         this.displayName = userResponse.data.displayName;
+        this.avatarUrl = this.extractAvatarUrl(userResponse.data);
         this.sessionExpiresAt = Date.now() + SESSION_CONFIG.SESSION_DURATION;
         this.pendingTwoFactorMethods = [];
         this.saveSession();
@@ -338,6 +353,7 @@ class VRChatAuthServiceClass {
           isAuthenticated: true,
           userId: this.userId,
           displayName: this.displayName,
+          avatarUrl: this.avatarUrl || undefined,
         };
       }
 
@@ -381,6 +397,7 @@ class VRChatAuthServiceClass {
       isAuthenticated: this.isAuthenticated(),
       userId: this.userId || undefined,
       displayName: this.displayName || undefined,
+      avatarUrl: this.avatarUrl || undefined,
     };
   }
 
@@ -399,6 +416,7 @@ class VRChatAuthServiceClass {
         // Update user info in case it changed
         this.userId = response.data.id;
         this.displayName = response.data.displayName;
+        this.avatarUrl = this.extractAvatarUrl(response.data);
         debugLog.info(`Session valid for ${this.displayName}`);
         return true;
       }

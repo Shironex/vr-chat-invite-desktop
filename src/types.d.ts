@@ -93,6 +93,7 @@ interface VRChatAuthState {
   isAuthenticated: boolean;
   userId?: string;
   displayName?: string;
+  avatarUrl?: string;
   requiresTwoFactor?: boolean;
   twoFactorMethods?: string[];
 }
@@ -225,6 +226,20 @@ interface InviteHistoryExportResult {
   error?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Tray Types
+// ─────────────────────────────────────────────────────────────────
+
+interface TraySettings {
+  minimizeToTray: boolean;
+  showDesktopNotifications: boolean;
+}
+
+interface TrayAPI {
+  getSettings: () => Promise<TraySettings>;
+  setSettings: (settings: Partial<TraySettings>) => Promise<TraySettings>;
+}
+
 interface VRChatAPI {
   // Authentication
   login: (credentials: VRChatLoginCredentials) => Promise<VRChatAuthState>;
@@ -295,4 +310,5 @@ declare interface Window {
   debugAPI: DebugAPI;
   updaterAPI: UpdaterAPI;
   vrchatAPI: VRChatAPI;
+  trayAPI: TrayAPI;
 }

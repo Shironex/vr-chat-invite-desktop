@@ -5,12 +5,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoginForm } from "./LoginForm";
 import { TwoFactorDialog } from "./TwoFactorDialog";
-import { ConnectionStatus } from "./ConnectionStatus";
 import { InviterStatsBar } from "./InviterStatsBar";
 import { InviterControls } from "./InviterControls";
 import { InviterLogs } from "./InviterLogs";
@@ -27,16 +25,15 @@ interface LogEntry {
 }
 
 interface InviterDashboardProps {
-  onOpenSettings?: () => void;
   className?: string;
 }
 
-export function InviterDashboard({ onOpenSettings, className }: InviterDashboardProps) {
+export function InviterDashboard({ className }: InviterDashboardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [displayName, setDisplayName] = useState<string | undefined>();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -91,7 +88,6 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
         // Check auth state
         const state = await window.vrchatAPI.getAuthState();
         setIsAuthenticated(state.isAuthenticated);
-        setDisplayName(state.displayName);
 
         if (state.isAuthenticated) {
           // Only add session restored message if there are no buffered logs
@@ -133,7 +129,6 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
     // Auth state changes
     const unsubAuth = window.vrchatAPI.onAuthStateChanged((state) => {
       setIsAuthenticated(state.isAuthenticated);
-      setDisplayName(state.displayName);
     });
 
     // 2FA required
@@ -235,17 +230,6 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
     }
   };
 
-  // Handle logout
-  const handleLogout = async () => {
-    await window.vrchatAPI.logout();
-    addLog({
-      type: "auth",
-      message: t("msgLoggedOut"),
-      timestamp: Date.now(),
-    });
-    toast.info(t("msgLoggedOut"));
-  };
-
   // Handle start monitoring
   const handleStartMonitoring = async () => {
     setIsStartingMonitor(true);
@@ -343,21 +327,6 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
   // Main dashboard
   return (
     <div className={cn("flex h-full flex-col gap-4 p-4", className)}>
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-4">
-        <ConnectionStatus
-          isAuthenticated={isAuthenticated}
-          displayName={displayName}
-          onLogout={handleLogout}
-          className="flex-1"
-        />
-        {onOpenSettings && (
-          <Button variant="outline" size="icon" onClick={onOpenSettings} title={t("settingsRateLimitTitle")}>
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
       {/* Stats Bar */}
       <InviterStatsBar
         successful={stats.successful}
@@ -376,6 +345,7 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
         onStartMonitoring={handleStartMonitoring}
         onStopMonitoring={handleStopMonitoring}
         onLaunchVRChat={handleLaunchVRChat}
+        onOpenSettings={() => navigate({ to: "/settings" })}
       />
 
       {/* Logs */}

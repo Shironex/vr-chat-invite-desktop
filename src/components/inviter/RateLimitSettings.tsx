@@ -5,10 +5,11 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, RotateCcw, Save, Info, FolderOpen, RefreshCw, Gamepad2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, RotateCcw, Save, Info, FolderOpen, RefreshCw, Gamepad2, CheckCircle2, XCircle, MonitorDown, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { cn } from "@/utils/tailwind";
@@ -25,6 +26,7 @@ interface SettingFieldProps {
   max: number;
   step?: number;
   hint: string;
+  unit?: string;
   disabled?: boolean;
 }
 
@@ -36,29 +38,28 @@ function SettingField({
   max,
   step = 1,
   hint,
+  unit,
   disabled,
 }: SettingFieldProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label>{label}</Label>
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) => {
-            const v = parseFloat(e.target.value);
-            if (!isNaN(v)) {
-              onChange(Math.min(max, Math.max(min, v)));
-            }
-          }}
-          min={min}
-          max={max}
-          step={step}
-          className="w-20 text-right"
-          disabled={disabled}
-        />
+        <Label className="text-sm">{label}</Label>
+        <span className="text-sm font-medium tabular-nums">
+          {value}
+          {unit && <span className="text-muted-foreground ml-1 text-xs">{unit}</span>}
+        </span>
       </div>
-      <p className="text-muted-foreground flex items-start gap-1 text-xs">
+      <Slider
+        value={[value]}
+        onValueChange={(values) => onChange(values[0])}
+        min={min}
+        max={max}
+        step={step}
+        disabled={disabled}
+        className="w-full"
+      />
+      <p className="text-muted-foreground flex items-start gap-1.5 text-xs">
         <Info className="mt-0.5 h-3 w-3 shrink-0" />
         {hint}
       </p>
@@ -82,16 +83,24 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
   const [vrchatPath, setVrchatPath] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
 
+  // Tray settings state
+  const [traySettings, setTraySettings] = useState({
+    minimizeToTray: true,
+    showDesktopNotifications: true,
+  });
+
   // Load settings on mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [loaded, path] = await Promise.all([
+        const [loaded, path, tray] = await Promise.all([
           window.vrchatAPI.getSettings(),
           window.vrchatAPI.getVRChatPath(),
+          window.trayAPI.getSettings(),
         ]);
         setSettings(loaded);
         setVrchatPath(path);
+        setTraySettings(tray);
       } catch (error) {
         console.error("Failed to load settings:", error);
       } finally {
@@ -238,6 +247,55 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
 
       <Separator />
 
+      {/* System Tray Settings Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <MonitorDown className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">{t("trayTitle")}</h2>
+        </div>
+
+        {/* Minimize to Tray Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label className="text-sm">{t("trayMinimizeToTray")}</Label>
+            <p className="text-muted-foreground text-xs">
+              {t("trayMinimizeToTrayHint")}
+            </p>
+          </div>
+          <Switch
+            checked={traySettings.minimizeToTray}
+            onCheckedChange={async (checked) => {
+              const updated = { ...traySettings, minimizeToTray: checked };
+              setTraySettings(updated);
+              await window.trayAPI.setSettings({ minimizeToTray: checked });
+            }}
+          />
+        </div>
+
+        {/* Desktop Notifications Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm">{t("trayShowNotifications")}</Label>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              {t("trayShowNotificationsHint")}
+            </p>
+          </div>
+          <Switch
+            checked={traySettings.showDesktopNotifications}
+            onCheckedChange={async (checked) => {
+              const updated = { ...traySettings, showDesktopNotifications: checked };
+              setTraySettings(updated);
+              await window.trayAPI.setSettings({ showDesktopNotifications: checked });
+            }}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Rate Limit Settings Section */}
       <div className="space-y-1">
         <h2 className="text-lg font-semibold">{t("settingsRateLimitTitle")}</h2>
@@ -246,7 +304,7 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <SettingField
           label={t("settingsBatchSize")}
           value={settings.inviteBatchCount}
@@ -263,6 +321,7 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
           onChange={(v) => setSettings((s) => ({ ...s, inviteBatchDelay: v }))}
           min={1}
           max={300}
+          unit="s"
           hint={t("settingsBatchDelayHint")}
           disabled={isSaving}
         />
@@ -274,6 +333,7 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
           min={0.5}
           max={60}
           step={0.5}
+          unit="s"
           hint={t("settingsDelayBetweenHint")}
           disabled={isSaving}
         />
@@ -294,6 +354,8 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
           onChange={(v) => setSettings((s) => ({ ...s, queuePauseDelay: v }))}
           min={60}
           max={3600}
+          step={10}
+          unit="s"
           hint={t("settingsQueuePauseDurationHint")}
           disabled={isSaving}
         />
