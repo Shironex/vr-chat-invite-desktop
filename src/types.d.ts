@@ -85,9 +85,159 @@ interface UpdaterAPI {
   onUpdateError: (callback: (error: string) => void) => () => void;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// VRChat Types
+// ─────────────────────────────────────────────────────────────────
+
+interface VRChatAuthState {
+  isAuthenticated: boolean;
+  userId?: string;
+  displayName?: string;
+  requiresTwoFactor?: boolean;
+  twoFactorMethods?: string[];
+}
+
+interface VRChatLoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface VRChatTwoFactorRequest {
+  method: "totp" | "emailotp" | "otp";
+  code: string;
+}
+
+interface InviteRequest {
+  userId: string;
+  displayName: string;
+  timestamp: number;
+}
+
+interface InviteResultData {
+  result: "success" | "skipped" | "error";
+  userId: string;
+  displayName: string;
+  message: string;
+  timestamp: number;
+}
+
+interface InviterStats {
+  totalProcessed: number;
+  successful: number;
+  skipped: number;
+  errors: number;
+  queueSize: number;
+}
+
+type InviterLogType =
+  | "detect"
+  | "invite"
+  | "skip"
+  | "error"
+  | "auth"
+  | "rate"
+  | "queue"
+  | "system";
+
+interface InviterLogEntry {
+  type: InviterLogType;
+  message: string;
+  timestamp: number;
+  userId?: string;
+  displayName?: string;
+}
+
+interface MonitorStatus {
+  isRunning: boolean;
+  logFilePath?: string;
+  lastActivity?: number;
+}
+
+interface RateLimitSettings {
+  inviteBatchCount: number;
+  inviteBatchDelay: number;
+  inviteDelayBetween: number;
+  queueThreshold: number;
+  queuePauseDelay: number;
+}
+
+interface DetectedPlayer {
+  userId: string;
+  displayName: string;
+  timestamp: number;
+}
+
+interface VRChatGroup {
+  id: string;
+  name: string;
+  shortCode: string;
+  discriminator: string;
+  description: string;
+  iconUrl?: string;
+  bannerUrl?: string;
+  privacy: "default" | "private" | "public";
+  ownerId: string;
+  memberCount: number;
+  onlineMemberCount?: number;
+  membershipStatus?: string;
+  isSearchable?: boolean;
+  joinState?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+interface VRChatAPI {
+  // Authentication
+  login: (credentials: VRChatLoginCredentials) => Promise<VRChatAuthState>;
+  logout: () => Promise<void>;
+  verify2FA: (request: VRChatTwoFactorRequest) => Promise<VRChatAuthState>;
+  getAuthState: () => Promise<VRChatAuthState>;
+  validateSession: () => Promise<boolean>;
+
+  // Log Monitor
+  startMonitor: () => Promise<boolean>;
+  stopMonitor: () => Promise<void>;
+  getMonitorStatus: () => Promise<MonitorStatus>;
+
+  // Invite System
+  addToQueue: (userId: string, displayName: string) => Promise<boolean>;
+  clearQueue: () => Promise<void>;
+  getStats: () => Promise<InviterStats>;
+  getQueue: () => Promise<InviteRequest[]>;
+
+  // VRChat Launcher
+  launchVRChat: () => Promise<boolean>;
+
+  // Settings
+  getSettings: () => Promise<RateLimitSettings>;
+  setSettings: (settings: Partial<RateLimitSettings>) => Promise<void>;
+  resetSettings: () => Promise<RateLimitSettings>;
+
+  // VRChat Path
+  getVRChatPath: () => Promise<string | null>;
+  setVRChatPath: (path: string) => Promise<boolean>;
+  detectVRChatPath: () => Promise<string | null>;
+  browseVRChatPath: () => Promise<string | null>;
+
+  // Group Info
+  getGroupInfo: () => Promise<VRChatGroup | null>;
+
+  // Event Listeners (return unsubscribe function)
+  onAuthStateChanged: (callback: (state: VRChatAuthState) => void) => () => void;
+  on2FARequired: (callback: (methods: string[]) => void) => () => void;
+  onMonitorStatusChanged: (callback: (status: MonitorStatus) => void) => () => void;
+  onPlayerDetected: (callback: (player: DetectedPlayer) => void) => () => void;
+  onInviteResult: (callback: (result: InviteResultData) => void) => () => void;
+  onStatsUpdated: (callback: (stats: InviterStats) => void) => () => void;
+  onQueueUpdated: (callback: (queue: InviteRequest[]) => void) => () => void;
+  onLogEntry: (callback: (entry: InviterLogEntry) => void) => () => void;
+}
+
 declare interface Window {
   themeMode: ThemeModeContext;
   electronWindow: ElectronWindow;
   debugAPI: DebugAPI;
   updaterAPI: UpdaterAPI;
+  vrchatAPI: VRChatAPI;
 }
