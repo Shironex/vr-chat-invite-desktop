@@ -196,7 +196,7 @@ export function ChangelogHistoryDialog() {
             <div className="flex flex-col items-center justify-center gap-2 py-8 text-destructive">
               <AlertCircle className="h-6 w-6" />
               <p className="text-sm">{error}</p>
-              <Button variant="outline" size="sm" onClick={fetchReleases}>
+              <Button variant="outline" size="sm" onClick={() => fetchReleases()}>
                 {t("changelogRetry")}
               </Button>
             </div>
