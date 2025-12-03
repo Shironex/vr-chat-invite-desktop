@@ -22,6 +22,8 @@ interface LogEntry {
   timestamp: number;
   userId?: string;
   displayName?: string;
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
 }
 
 interface InviterDashboardProps {
@@ -68,29 +70,54 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
     setLogs((prev) => [...prev.slice(-999), entry]);
   }, []);
 
-  // Check initial auth state
+  // Check initial auth state, monitor status, stats, and restore logs
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeState = async () => {
       try {
+        // First, restore buffered logs from the main process
+        const bufferedLogs = await window.vrchatAPI.getLogBuffer();
+        if (bufferedLogs.length > 0) {
+          setLogs(bufferedLogs);
+        }
+
+        // Check auth state
         const state = await window.vrchatAPI.getAuthState();
         setIsAuthenticated(state.isAuthenticated);
         setDisplayName(state.displayName);
 
         if (state.isAuthenticated) {
-          addLog({
-            type: "auth",
-            message: t("msgSessionRestored", { name: state.displayName }),
-            timestamp: Date.now(),
+          // Only add session restored message if there are no buffered logs
+          // (meaning this is a fresh session, not a navigation)
+          if (bufferedLogs.length === 0) {
+            addLog({
+              type: "auth",
+              message: t("msgSessionRestored", { name: state.displayName }),
+              timestamp: Date.now(),
+            });
+          }
+
+          // Also check monitor status and stats if authenticated
+          const [monitorStatus, currentStats] = await Promise.all([
+            window.vrchatAPI.getMonitorStatus(),
+            window.vrchatAPI.getStats(),
+          ]);
+
+          setIsMonitoring(monitorStatus.isRunning);
+          setStats({
+            successful: currentStats.successful,
+            skipped: currentStats.skipped,
+            errors: currentStats.errors,
+            queueSize: currentStats.queueSize,
           });
         }
       } catch (error) {
-        console.error("Failed to check auth:", error);
+        console.error("Failed to initialize state:", error);
       } finally {
         setIsAuthLoading(false);
       }
     };
 
-    checkAuth();
+    initializeState();
   }, [addLog, t]);
 
   // Set up event listeners

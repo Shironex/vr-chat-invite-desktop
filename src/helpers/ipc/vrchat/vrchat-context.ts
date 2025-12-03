@@ -17,6 +17,10 @@ import type {
   RateLimitSettings,
   DetectedPlayer,
   VRChatGroup,
+  InviteHistoryQueryOptions,
+  InviteHistoryResponse,
+  InviteHistoryStats,
+  InviteHistoryExportResult,
 } from "../../vrchat/vrchat-types";
 
 export function exposeVRChatContext() {
@@ -174,6 +178,50 @@ export function exposeVRChatContext() {
      */
     getGroupInfo: (): Promise<VRChatGroup | null> =>
       ipcRenderer.invoke(VRCHAT_CHANNELS.GROUP_GET_INFO),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Invite History
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get paginated invite history
+     */
+    getHistory: (options?: InviteHistoryQueryOptions): Promise<InviteHistoryResponse> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.HISTORY_GET, options),
+
+    /**
+     * Get invite history statistics
+     */
+    getHistoryStats: (): Promise<InviteHistoryStats> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.HISTORY_GET_STATS),
+
+    /**
+     * Export history to CSV file (opens save dialog)
+     */
+    exportHistoryCSV: (): Promise<InviteHistoryExportResult> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.HISTORY_EXPORT_CSV),
+
+    /**
+     * Clear all invite history
+     */
+    clearHistory: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.HISTORY_CLEAR),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Log Buffer
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get buffered logs (for restoring on navigation)
+     */
+    getLogBuffer: (): Promise<InviterLogEntry[]> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.LOG_GET_BUFFER),
+
+    /**
+     * Clear the log buffer
+     */
+    clearLogBuffer: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.LOG_CLEAR),
 
     // ─────────────────────────────────────────────────────────────────
     // Event Listeners

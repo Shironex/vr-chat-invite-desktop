@@ -162,6 +162,9 @@ export interface InviterLogEntry {
   timestamp: number;
   userId?: string;
   displayName?: string;
+  // Translation support - if provided, renderer will translate
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
 }
 
 /**
@@ -200,4 +203,54 @@ export interface DetectedPlayer {
   userId: string;
   displayName: string;
   timestamp: number;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Invite History Types
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * History entry with unique ID
+ */
+export interface InviteHistoryEntry extends InviteResultData {
+  id: string;
+}
+
+/**
+ * Query options for fetching history
+ */
+export interface InviteHistoryQueryOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  status?: InviteResult;
+}
+
+/**
+ * Paginated history response
+ */
+export interface InviteHistoryResponse {
+  entries: InviteHistoryEntry[];
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * Aggregated history statistics
+ */
+export interface InviteHistoryStats {
+  total: number;
+  successful: number;
+  skipped: number;
+  errors: number;
+  lastInviteAt?: number;
+}
+
+/**
+ * CSV export result
+ */
+export interface InviteHistoryExportResult {
+  success: boolean;
+  path?: string;
+  error?: string;
 }

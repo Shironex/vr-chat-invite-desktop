@@ -4,12 +4,15 @@
  */
 
 import { BrowserWindow, ipcMain, dialog } from "electron";
+import * as fs from "fs";
 import { VRCHAT_CHANNELS } from "./vrchat-channels";
 import { debugLog } from "../../debug-mode";
 import { VRChatAuthService } from "../../vrchat/vrchat-auth.service";
 import { VRChatApiService } from "../../vrchat/vrchat-api.service";
 import { LogMonitorService } from "../../vrchat/log-monitor.service";
 import { InviteQueueService } from "../../vrchat/invite-queue.service";
+import { InviteHistoryService } from "../../vrchat/invite-history.service";
+import { LogBufferService } from "../../vrchat/log-buffer.service";
 import { launchVRChat } from "../../vrchat/vrchat-launcher";
 import { SettingsService } from "../../vrchat/settings.service";
 import { discordWebhook } from "../../vrchat/discord-webhook.service";
@@ -20,6 +23,9 @@ import type {
   RateLimitSettings,
   DetectedPlayer,
   InviterLogType,
+  InviterLogEntry,
+  InviteHistoryQueryOptions,
+  InviteHistoryExportResult,
 } from "../../vrchat/vrchat-types";
 
 let mainWindow: BrowserWindow | null = null;
@@ -124,14 +130,18 @@ export function registerVRChatListeners(window: BrowserWindow) {
       debugLog.info(`Player detected: ${player.displayName} (${player.userId})`);
       // Emit to renderer
       sendToRenderer(VRCHAT_CHANNELS.MONITOR_PLAYER_DETECTED, player);
-      // Also emit a log entry
-      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, {
+      // Also emit a log entry with translation key
+      const playerLogEntry: InviterLogEntry = {
         type: "detect",
         message: `Player joined: ${player.displayName} (${player.userId})`,
         timestamp: player.timestamp,
         userId: player.userId,
         displayName: player.displayName,
-      });
+        i18nKey: "logPlayerJoined",
+        i18nParams: { name: `${player.displayName} (${player.userId})` },
+      };
+      LogBufferService.add(playerLogEntry);
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, playerLogEntry);
 
       // Add to invite queue automatically
       const added = InviteQueueService.add(player.userId, player.displayName);
@@ -144,11 +154,14 @@ export function registerVRChatListeners(window: BrowserWindow) {
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
 
     if (started) {
-      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, {
+      const monitorStartLog: InviterLogEntry = {
         type: "system",
         message: "Log monitor started - watching for player joins",
         timestamp: Date.now(),
-      });
+        i18nKey: "logMonitorStarted",
+      };
+      LogBufferService.add(monitorStartLog);
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, monitorStartLog);
       discordWebhook.sendMonitorStarted();
     }
 
@@ -174,6 +187,8 @@ export function registerVRChatListeners(window: BrowserWindow) {
   InviteQueueService.setCallbacks({
     onInviteResult: (result) => {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_RESULT, result);
+      // Also save to persistent history
+      InviteHistoryService.addEntry(result);
     },
     onStatsUpdate: (stats) => {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_STATS_UPDATED, stats);
@@ -181,14 +196,20 @@ export function registerVRChatListeners(window: BrowserWindow) {
     onQueueUpdate: (queue) => {
       sendToRenderer(VRCHAT_CHANNELS.INVITE_QUEUE_UPDATED, queue);
     },
-    onLog: (type, message, userId, displayName) => {
-      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, {
+    onLog: (type, message, userId, displayName, i18nKey, i18nParams) => {
+      const logEntry: InviterLogEntry = {
         type: type as InviterLogType,
         message,
         timestamp: Date.now(),
         userId,
         displayName,
-      });
+        i18nKey,
+        i18nParams,
+      };
+      // Buffer the log entry for persistence
+      LogBufferService.add(logEntry);
+      // Send to renderer
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, logEntry);
     },
   });
 
@@ -216,6 +237,20 @@ export function registerVRChatListeners(window: BrowserWindow) {
   });
 
   // ─────────────────────────────────────────────────────────────────
+  // Log Buffer Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.LOG_GET_BUFFER, async (): Promise<InviterLogEntry[]> => {
+    debugLog.ipc("LOG_GET_BUFFER called");
+    return LogBufferService.getLogs();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.LOG_CLEAR, async (): Promise<void> => {
+    debugLog.ipc("LOG_CLEAR called");
+    LogBufferService.clear();
+  });
+
+  // ─────────────────────────────────────────────────────────────────
   // VRChat Launcher Handler
   // ─────────────────────────────────────────────────────────────────
 
@@ -223,11 +258,13 @@ export function registerVRChatListeners(window: BrowserWindow) {
     debugLog.ipc("LAUNCH_VRCHAT called");
     const launched = await launchVRChat();
     if (launched) {
-      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, {
+      const launchLog: InviterLogEntry = {
         type: "system",
         message: "VRChat launch initiated",
         timestamp: Date.now(),
-      });
+      };
+      LogBufferService.add(launchLog);
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, launchLog);
     }
     return launched;
   });
@@ -305,6 +342,59 @@ export function registerVRChatListeners(window: BrowserWindow) {
     debugLog.ipc("GROUP_GET_INFO called");
     return VRChatApiService.getGroupInfo();
   });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Invite History Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.HISTORY_GET,
+    async (_event, options?: InviteHistoryQueryOptions) => {
+      debugLog.ipc(`HISTORY_GET called with options: ${JSON.stringify(options)}`);
+      return InviteHistoryService.getHistory(options);
+    }
+  );
+
+  ipcMain.handle(VRCHAT_CHANNELS.HISTORY_GET_STATS, async () => {
+    debugLog.ipc("HISTORY_GET_STATS called");
+    return InviteHistoryService.getStats();
+  });
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.HISTORY_EXPORT_CSV,
+    async (): Promise<InviteHistoryExportResult> => {
+      debugLog.ipc("HISTORY_EXPORT_CSV called");
+
+      try {
+        const csvContent = InviteHistoryService.generateCSV();
+
+        const result = await dialog.showSaveDialog(mainWindow!, {
+          title: "Export Invite History",
+          defaultPath: `invite-history-${new Date().toISOString().split("T")[0]}.csv`,
+          filters: [{ name: "CSV Files", extensions: ["csv"] }],
+        });
+
+        if (result.canceled || !result.filePath) {
+          return { success: false };
+        }
+
+        fs.writeFileSync(result.filePath, csvContent, "utf-8");
+        debugLog.info(`History exported to: ${result.filePath}`);
+        return { success: true, path: result.filePath };
+      } catch (error) {
+        debugLog.error(`Failed to export history: ${error}`);
+        return { success: false, error: String(error) };
+      }
+    }
+  );
+
+  ipcMain.handle(VRCHAT_CHANNELS.HISTORY_CLEAR, async (): Promise<void> => {
+    debugLog.ipc("HISTORY_CLEAR called");
+    InviteHistoryService.clearHistory();
+  });
+
+  // Initialize history service (cleanup old entries)
+  InviteHistoryService.initialize();
 
   debugLog.success("VRChat IPC listeners registered");
 }

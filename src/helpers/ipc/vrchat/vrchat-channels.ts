@@ -36,6 +36,8 @@ export const VRCHAT_CHANNELS = {
 
   // Logging Events (main -> renderer)
   LOG_ENTRY: "vrchat:log:entry",
+  LOG_GET_BUFFER: "vrchat:log:getBuffer",
+  LOG_CLEAR: "vrchat:log:clear",
 
   // VRChat Launcher
   LAUNCH_VRCHAT: "vrchat:launch",
@@ -53,6 +55,12 @@ export const VRCHAT_CHANNELS = {
 
   // Group Info
   GROUP_GET_INFO: "vrchat:group:getInfo",
+
+  // Invite History
+  HISTORY_GET: "vrchat:history:get",
+  HISTORY_GET_STATS: "vrchat:history:getStats",
+  HISTORY_EXPORT_CSV: "vrchat:history:exportCSV",
+  HISTORY_CLEAR: "vrchat:history:clear",
 } as const;
 
 export type VRChatChannel =

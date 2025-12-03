@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import SettingsModal from "./SettingsModal";
 import { ChangelogHistoryDialog } from "./ChangelogHistoryDialog";
-import { Home } from "lucide-react";
+import { Home, History } from "lucide-react";
 import { debugLog } from "@/helpers/debug-logger";
 
 export default function Navbar() {
@@ -39,6 +39,15 @@ export default function Navbar() {
               >
                 <Home className="h-4 w-4" />
                 {t("navHome")}
+              </Button>
+            </Link>
+            <Link to="/history">
+              <Button
+                variant={isActive("/history") ? "default" : "ghost"}
+                className="gap-2"
+              >
+                <History className="h-4 w-4" />
+                {t("navHistory")}
               </Button>
             </Link>
           </div>

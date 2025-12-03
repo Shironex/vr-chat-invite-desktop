@@ -28,6 +28,8 @@ interface LogEntry {
   timestamp: number;
   userId?: string;
   displayName?: string;
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
 }
 
 interface InviterLogsProps {
@@ -52,6 +54,17 @@ function formatTime(timestamp: number): string {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+function getLogMessage(
+  entry: LogEntry,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
+  // Use translation if i18nKey is provided
+  if (entry.i18nKey) {
+    return t(entry.i18nKey, entry.i18nParams);
+  }
+  return entry.message;
 }
 
 export function InviterLogs({ logs, maxLogs = 500, className }: InviterLogsProps) {
@@ -178,7 +191,7 @@ export function InviterLogs({ logs, maxLogs = 500, className }: InviterLogsProps
                   {formatTime(entry.timestamp)}
                 </span>
                 <span className="shrink-0">{getLogEmoji(entry.type)}</span>
-                <span className="break-all">{entry.message}</span>
+                <span className="break-all">{getLogMessage(entry, t)}</span>
               </div>
             ))
           )}

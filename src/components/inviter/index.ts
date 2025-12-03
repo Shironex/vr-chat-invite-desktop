@@ -6,3 +6,4 @@ export { InviterControls } from "./InviterControls";
 export { InviterLogs } from "./InviterLogs";
 export { InviterDashboard } from "./InviterDashboard";
 export { RateLimitSettings } from "./RateLimitSettings";
+export { InviteHistoryPage } from "./InviteHistoryPage";

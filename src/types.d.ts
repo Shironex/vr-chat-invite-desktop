@@ -145,6 +145,9 @@ interface InviterLogEntry {
   timestamp: number;
   userId?: string;
   displayName?: string;
+  // Translation support - if provided, renderer will translate
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
 }
 
 interface MonitorStatus {
@@ -187,6 +190,41 @@ interface VRChatGroup {
   updatedAt?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Invite History Types
+// ─────────────────────────────────────────────────────────────────
+
+interface InviteHistoryEntry extends InviteResultData {
+  id: string;
+}
+
+interface InviteHistoryQueryOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  status?: "success" | "skipped" | "error";
+}
+
+interface InviteHistoryResponse {
+  entries: InviteHistoryEntry[];
+  total: number;
+  hasMore: boolean;
+}
+
+interface InviteHistoryStats {
+  total: number;
+  successful: number;
+  skipped: number;
+  errors: number;
+  lastInviteAt?: number;
+}
+
+interface InviteHistoryExportResult {
+  success: boolean;
+  path?: string;
+  error?: string;
+}
+
 interface VRChatAPI {
   // Authentication
   login: (credentials: VRChatLoginCredentials) => Promise<VRChatAuthState>;
@@ -222,6 +260,16 @@ interface VRChatAPI {
 
   // Group Info
   getGroupInfo: () => Promise<VRChatGroup | null>;
+
+  // Invite History
+  getHistory: (options?: InviteHistoryQueryOptions) => Promise<InviteHistoryResponse>;
+  getHistoryStats: () => Promise<InviteHistoryStats>;
+  exportHistoryCSV: () => Promise<InviteHistoryExportResult>;
+  clearHistory: () => Promise<void>;
+
+  // Log Buffer
+  getLogBuffer: () => Promise<InviterLogEntry[]>;
+  clearLogBuffer: () => Promise<void>;
 
   // Event Listeners (return unsubscribe function)
   onAuthStateChanged: (callback: (state: VRChatAuthState) => void) => () => void;

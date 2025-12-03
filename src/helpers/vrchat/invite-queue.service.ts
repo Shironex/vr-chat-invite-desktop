@@ -18,7 +18,14 @@ import type {
 type OnInviteResultCallback = (result: InviteResultData) => void;
 type OnStatsUpdateCallback = (stats: InviterStats) => void;
 type OnQueueUpdateCallback = (queue: InviteRequest[]) => void;
-type OnLogCallback = (type: string, message: string, userId?: string, displayName?: string) => void;
+type OnLogCallback = (
+  type: string,
+  message: string,
+  userId?: string,
+  displayName?: string,
+  i18nKey?: string,
+  i18nParams?: Record<string, string | number>
+) => void;
 
 /**
  * Invite Queue Service Singleton
@@ -82,7 +89,7 @@ class InviteQueueServiceClass {
     this.stats.queueSize = this.queue.length;
 
     debugLog.info(`Added to queue: ${displayName} (${userId})`);
-    this.emitLog("queue", `Added to queue: ${displayName}`, userId, displayName);
+    this.emitLog("queue", `Added to queue: ${displayName}`, userId, displayName, "logAddedToQueue", { name: displayName });
     this.emitQueueUpdate();
     this.emitStatsUpdate();
 
@@ -178,7 +185,11 @@ class InviteQueueServiceClass {
         );
         this.emitLog(
           "rate",
-          `Queue threshold reached! Pausing for ${Math.floor(settings.queuePauseDelay / 60)} minutes...`
+          `Queue threshold reached! Pausing for ${Math.floor(settings.queuePauseDelay / 60)} minutes...`,
+          undefined,
+          undefined,
+          "logQueueThreshold",
+          { minutes: Math.floor(settings.queuePauseDelay / 60) }
         );
         discordWebhook.sendRateLimitWarning(settings.queuePauseDelay);
         await this.sleep(settings.queuePauseDelay * 1000);
@@ -220,7 +231,14 @@ class InviteQueueServiceClass {
           debugLog.info(
             `Batch limit reached (${invitesInBatch}), pausing for ${settings.inviteBatchDelay}s`
           );
-          this.emitLog("rate", `Batch limit reached, pausing ${settings.inviteBatchDelay}s...`);
+          this.emitLog(
+            "rate",
+            `Batch limit reached, pausing ${settings.inviteBatchDelay}s...`,
+            undefined,
+            undefined,
+            "logBatchLimit",
+            { seconds: settings.inviteBatchDelay }
+          );
           await this.sleep(settings.inviteBatchDelay * 1000);
           invitesInBatch = 0;
         } else {
@@ -250,7 +268,7 @@ class InviteQueueServiceClass {
 
       if (response.success) {
         debugLog.success(`Invited ${displayName}`);
-        this.emitLog("invite", `Invited ${displayName}`, userId, displayName);
+        this.emitLog("invite", `Invited ${displayName}`, userId, displayName, "logInviteSent", { name: displayName });
         discordWebhook.sendInviteSuccess(userId, displayName);
 
         return {
@@ -264,7 +282,7 @@ class InviteQueueServiceClass {
 
       if (response.skipped) {
         debugLog.info(`Skipped ${displayName}: ${response.message}`);
-        this.emitLog("skip", `Skipped ${displayName}: ${response.message}`, userId, displayName);
+        this.emitLog("skip", `Skipped ${displayName}: ${response.message}`, userId, displayName, "logSkipped", { name: displayName, reason: response.message });
         discordWebhook.sendSkipped(userId, displayName, response.message);
 
         return {
@@ -277,7 +295,7 @@ class InviteQueueServiceClass {
       }
 
       debugLog.error(`Failed to invite ${displayName}: ${response.message}`);
-      this.emitLog("error", `Error inviting ${displayName}: ${response.message}`, userId, displayName);
+      this.emitLog("error", `Error inviting ${displayName}: ${response.message}`, userId, displayName, "logInviteError", { name: displayName, error: response.message });
       discordWebhook.sendError(`Nie udało się zaprosić ${displayName}`, response.message);
 
       return {
@@ -290,7 +308,7 @@ class InviteQueueServiceClass {
     } catch (error) {
       const message = String(error);
       debugLog.error(`Exception inviting ${displayName}: ${message}`);
-      this.emitLog("error", `Error: ${message}`, userId, displayName);
+      this.emitLog("error", `Error: ${message}`, userId, displayName, "logError", { error: message });
       discordWebhook.sendError(`Błąd podczas zapraszania ${displayName}`, message);
 
       return {
@@ -324,9 +342,16 @@ class InviteQueueServiceClass {
   /**
    * Emit log
    */
-  private emitLog(type: string, message: string, userId?: string, displayName?: string): void {
+  private emitLog(
+    type: string,
+    message: string,
+    userId?: string,
+    displayName?: string,
+    i18nKey?: string,
+    i18nParams?: Record<string, string | number>
+  ): void {
     if (this.onLog) {
-      this.onLog(type, message, userId, displayName);
+      this.onLog(type, message, userId, displayName, i18nKey, i18nParams);
     }
   }
 
