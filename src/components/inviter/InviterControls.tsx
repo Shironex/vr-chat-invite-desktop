@@ -4,7 +4,7 @@
  */
 
 import { useTranslation } from "react-i18next";
-import { Play, Square, Gamepad2, Loader2 } from "lucide-react";
+import { Play, Square, Gamepad2, Loader2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/tailwind";
 
@@ -13,6 +13,7 @@ interface InviterControlsProps {
   isStarting?: boolean;
   isStopping?: boolean;
   isLaunching?: boolean;
+  isVRChatRunning?: boolean;
   onStartMonitoring: () => void;
   onStopMonitoring: () => void;
   onLaunchVRChat: () => void;
@@ -24,6 +25,7 @@ export function InviterControls({
   isStarting = false,
   isStopping = false,
   isLaunching = false,
+  isVRChatRunning = false,
   onStartMonitoring,
   onStopMonitoring,
   onLaunchVRChat,
@@ -78,7 +80,7 @@ export function InviterControls({
       <Button
         variant="outline"
         onClick={onLaunchVRChat}
-        disabled={isLaunching}
+        disabled={isLaunching || isVRChatRunning}
       >
         {isLaunching ? (
           <>
@@ -92,6 +94,27 @@ export function InviterControls({
           </>
         )}
       </Button>
+
+      {/* VRChat Status Indicator */}
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-md border px-3 py-2 text-sm",
+          isVRChatRunning
+            ? "border-green-500/50 bg-green-500/10 text-green-500"
+            : "border-muted text-muted-foreground"
+        )}
+        title={isVRChatRunning ? t("statusVRChatRunning") : t("statusVRChatNotRunning")}
+      >
+        <Circle
+          className={cn(
+            "h-2 w-2",
+            isVRChatRunning ? "fill-green-500 text-green-500" : "fill-muted-foreground text-muted-foreground"
+          )}
+        />
+        <span className="hidden sm:inline">
+          {isVRChatRunning ? t("statusVRChatRunning") : t("statusVRChatNotRunning")}
+        </span>
+      </div>
     </div>
   );
 }

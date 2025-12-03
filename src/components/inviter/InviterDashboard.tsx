@@ -54,6 +54,9 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
   // Launcher state
   const [isLaunching, setIsLaunching] = useState(false);
 
+  // VRChat process state
+  const [isVRChatRunning, setIsVRChatRunning] = useState(false);
+
   // Stats state
   const [stats, setStats] = useState({
     successful: 0,
@@ -79,6 +82,11 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
         if (bufferedLogs.length > 0) {
           setLogs(bufferedLogs);
         }
+
+        // Start watching VRChat process and check initial status
+        await window.vrchatAPI.startProcessWatching();
+        const processRunning = await window.vrchatAPI.checkVRChatProcess();
+        setIsVRChatRunning(processRunning);
 
         // Check auth state
         const state = await window.vrchatAPI.getAuthState();
@@ -154,12 +162,18 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
       addLog(entry);
     });
 
+    // Process status changes
+    const unsubProcess = window.vrchatAPI.onProcessStatusChanged((isRunning) => {
+      setIsVRChatRunning(isRunning);
+    });
+
     return () => {
       unsubAuth();
       unsub2FA();
       unsubMonitor();
       unsubStats();
       unsubLogs();
+      unsubProcess();
     };
   }, [addLog]);
 
@@ -236,6 +250,22 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
   const handleStartMonitoring = async () => {
     setIsStartingMonitor(true);
     try {
+      // First check if VRChat is running
+      const processRunning = await window.vrchatAPI.checkVRChatProcess();
+      setIsVRChatRunning(processRunning);
+
+      if (!processRunning) {
+        // VRChat is not running - show error
+        addLog({
+          type: "error",
+          message: t("msgVRChatNotRunning"),
+          timestamp: Date.now(),
+          i18nKey: "logVRChatRequired",
+        });
+        toast.error(t("msgVRChatNotRunning"));
+        return;
+      }
+
       const started = await window.vrchatAPI.startMonitor();
       if (started) {
         toast.success(t("msgMonitorStarted"));
@@ -342,6 +372,7 @@ export function InviterDashboard({ onOpenSettings, className }: InviterDashboard
         isStarting={isStartingMonitor}
         isStopping={isStoppingMonitor}
         isLaunching={isLaunching}
+        isVRChatRunning={isVRChatRunning}
         onStartMonitoring={handleStartMonitoring}
         onStopMonitoring={handleStopMonitoring}
         onLaunchVRChat={handleLaunchVRChat}

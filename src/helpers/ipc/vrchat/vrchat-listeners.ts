@@ -13,6 +13,7 @@ import { LogMonitorService } from "../../vrchat/log-monitor.service";
 import { InviteQueueService } from "../../vrchat/invite-queue.service";
 import { InviteHistoryService } from "../../vrchat/invite-history.service";
 import { LogBufferService } from "../../vrchat/log-buffer.service";
+import { ProcessDetectionService } from "../../vrchat/process-detection.service";
 import { launchVRChat } from "../../vrchat/vrchat-launcher";
 import { SettingsService } from "../../vrchat/settings.service";
 import { discordWebhook } from "../../vrchat/discord-webhook.service";
@@ -341,6 +342,43 @@ export function registerVRChatListeners(window: BrowserWindow) {
   ipcMain.handle(VRCHAT_CHANNELS.GROUP_GET_INFO, async () => {
     debugLog.ipc("GROUP_GET_INFO called");
     return VRChatApiService.getGroupInfo();
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Process Detection Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.PROCESS_CHECK, async (): Promise<boolean> => {
+    debugLog.ipc("PROCESS_CHECK called");
+    return ProcessDetectionService.checkVRChatRunning();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.PROCESS_GET_STATUS, async (): Promise<boolean> => {
+    debugLog.ipc("PROCESS_GET_STATUS called");
+    return ProcessDetectionService.getStatus();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.PROCESS_START_WATCHING, async (): Promise<void> => {
+    debugLog.ipc("PROCESS_START_WATCHING called");
+    ProcessDetectionService.startWatching((isRunning) => {
+      // Notify renderer when VRChat process status changes
+      sendToRenderer(VRCHAT_CHANNELS.PROCESS_STATUS_CHANGED, isRunning);
+
+      // Log the status change
+      const logEntry: InviterLogEntry = {
+        type: "system",
+        message: isRunning ? "VRChat detected as running" : "VRChat is no longer running",
+        timestamp: Date.now(),
+        i18nKey: isRunning ? "logVRChatRunning" : "logVRChatNotRunning",
+      };
+      LogBufferService.add(logEntry);
+      sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, logEntry);
+    });
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.PROCESS_STOP_WATCHING, async (): Promise<void> => {
+    debugLog.ipc("PROCESS_STOP_WATCHING called");
+    ProcessDetectionService.stopWatching();
   });
 
   // ─────────────────────────────────────────────────────────────────

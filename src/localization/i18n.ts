@@ -235,6 +235,13 @@ i18n.use(initReactI18next).init({
         logBatchPause: "Limit partii, pauza {{seconds}}s...",
         logBatchLimit: "Limit partii, pauza {{seconds}}s...",
         logMonitorStarted: "Monitor uruchomiony - obserwowanie graczy",
+        // Process detection
+        logVRChatRunning: "VRChat wykryty jako uruchomiony",
+        logVRChatNotRunning: "VRChat nie jest już uruchomiony",
+        logVRChatRequired: "VRChat musi być uruchomiony aby rozpocząć monitorowanie",
+        msgVRChatNotRunning: "VRChat nie jest uruchomiony. Uruchom VRChat przed rozpoczęciem monitorowania.",
+        statusVRChatRunning: "VRChat uruchomiony",
+        statusVRChatNotRunning: "VRChat wyłączony",
       },
     },
     en: {
@@ -467,6 +474,13 @@ i18n.use(initReactI18next).init({
         logBatchPause: "Batch limit reached, pausing {{seconds}}s...",
         logBatchLimit: "Batch limit reached, pausing {{seconds}}s...",
         logMonitorStarted: "Log monitor started - watching for player joins",
+        // Process detection
+        logVRChatRunning: "VRChat detected as running",
+        logVRChatNotRunning: "VRChat is no longer running",
+        logVRChatRequired: "VRChat must be running to start monitoring",
+        msgVRChatNotRunning: "VRChat is not running. Please start VRChat before starting monitoring.",
+        statusVRChatRunning: "VRChat running",
+        statusVRChatNotRunning: "VRChat not running",
       },
     },
   },

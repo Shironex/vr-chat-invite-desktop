@@ -56,6 +56,13 @@ export const VRCHAT_CHANNELS = {
   // Group Info
   GROUP_GET_INFO: "vrchat:group:getInfo",
 
+  // Process Detection
+  PROCESS_CHECK: "vrchat:process:check",
+  PROCESS_GET_STATUS: "vrchat:process:getStatus",
+  PROCESS_START_WATCHING: "vrchat:process:startWatching",
+  PROCESS_STOP_WATCHING: "vrchat:process:stopWatching",
+  PROCESS_STATUS_CHANGED: "vrchat:process:statusChanged",
+
   // Invite History
   HISTORY_GET: "vrchat:history:get",
   HISTORY_GET_STATS: "vrchat:history:getStats",

@@ -180,6 +180,34 @@ export function exposeVRChatContext() {
       ipcRenderer.invoke(VRCHAT_CHANNELS.GROUP_GET_INFO),
 
     // ─────────────────────────────────────────────────────────────────
+    // Process Detection
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Check if VRChat process is currently running
+     */
+    checkVRChatProcess: (): Promise<boolean> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.PROCESS_CHECK),
+
+    /**
+     * Get cached VRChat process status
+     */
+    getVRChatProcessStatus: (): Promise<boolean> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.PROCESS_GET_STATUS),
+
+    /**
+     * Start watching for VRChat process changes
+     */
+    startProcessWatching: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.PROCESS_START_WATCHING),
+
+    /**
+     * Stop watching for VRChat process changes
+     */
+    stopProcessWatching: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.PROCESS_STOP_WATCHING),
+
+    // ─────────────────────────────────────────────────────────────────
     // Invite History
     // ─────────────────────────────────────────────────────────────────
 
@@ -329,6 +357,18 @@ export function exposeVRChatContext() {
       ipcRenderer.on(VRCHAT_CHANNELS.LOG_ENTRY, handler);
       return () => {
         ipcRenderer.removeListener(VRCHAT_CHANNELS.LOG_ENTRY, handler);
+      };
+    },
+
+    /**
+     * Listen for VRChat process status changes
+     */
+    onProcessStatusChanged: (callback: (isRunning: boolean) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, isRunning: boolean) =>
+        callback(isRunning);
+      ipcRenderer.on(VRCHAT_CHANNELS.PROCESS_STATUS_CHANGED, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.PROCESS_STATUS_CHANGED, handler);
       };
     },
   });

@@ -261,6 +261,12 @@ interface VRChatAPI {
   // Group Info
   getGroupInfo: () => Promise<VRChatGroup | null>;
 
+  // Process Detection
+  checkVRChatProcess: () => Promise<boolean>;
+  getVRChatProcessStatus: () => Promise<boolean>;
+  startProcessWatching: () => Promise<void>;
+  stopProcessWatching: () => Promise<void>;
+
   // Invite History
   getHistory: (options?: InviteHistoryQueryOptions) => Promise<InviteHistoryResponse>;
   getHistoryStats: () => Promise<InviteHistoryStats>;
@@ -280,6 +286,7 @@ interface VRChatAPI {
   onStatsUpdated: (callback: (stats: InviterStats) => void) => () => void;
   onQueueUpdated: (callback: (queue: InviteRequest[]) => void) => () => void;
   onLogEntry: (callback: (entry: InviterLogEntry) => void) => () => void;
+  onProcessStatusChanged: (callback: (isRunning: boolean) => void) => () => void;
 }
 
 declare interface Window {
