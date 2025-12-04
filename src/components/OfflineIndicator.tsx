@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { WifiOff, Wifi } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/tailwind";
 
 /**
@@ -14,19 +15,18 @@ export function NetworkStatusIcon({ className }: { className?: string }) {
   const isOnline = useOnlineStatus();
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center",
-        className
-      )}
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn("cursor-default", className)}
       title={isOnline ? t("onlineTitle") : t("offlineTitle")}
     >
       {isOnline ? (
-        <Wifi className="h-4 w-4 text-green-500" />
+        <Wifi className="h-5 w-5 text-green-500" />
       ) : (
-        <WifiOff className="h-4 w-4 text-red-500 animate-pulse" />
+        <WifiOff className="h-5 w-5 text-red-500 animate-pulse" />
       )}
-    </div>
+    </Button>
   );
 }
 

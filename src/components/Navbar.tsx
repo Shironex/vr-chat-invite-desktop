@@ -122,7 +122,7 @@ export default function Navbar() {
           {isAuthenticated && (
             <div
               className={cn(
-                "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs",
+                "flex h-9 items-center gap-2 rounded-md border px-2.5 text-xs",
                 isVRChatRunning
                   ? "border-green-500/50 bg-green-500/10 text-green-500"
                   : "border-muted text-muted-foreground"
