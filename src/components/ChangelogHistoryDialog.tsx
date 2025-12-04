@@ -140,9 +140,8 @@ export function ChangelogHistoryDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          <History className="h-4 w-4" />
-          {t("changelogHistory")}
+        <Button variant="ghost" size="icon" title={t("changelogHistory")}>
+          <History className="h-5 w-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
