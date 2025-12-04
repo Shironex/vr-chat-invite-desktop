@@ -270,6 +270,21 @@ export interface TraySettings {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Discord Webhook Settings Types
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Discord webhook settings (user configurable)
+ * Disabled by default - user must enable and add their own webhook URLs
+ */
+export interface WebhookSettings {
+  enabled: boolean; // Default: false
+  successUrl: string; // Default: "" (empty)
+  warningUrl: string; // Default: "" (empty)
+  errorUrl: string; // Default: "" (empty)
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Session Statistics Types
 // ─────────────────────────────────────────────────────────────────
 

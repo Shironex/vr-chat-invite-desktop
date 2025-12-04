@@ -31,6 +31,7 @@ import type {
   InviteHistoryQueryOptions,
   InviteHistoryExportResult,
   SessionStatsQueryOptions,
+  WebhookSettings,
 } from "../../vrchat/vrchat-types";
 
 let mainWindow: BrowserWindow | null = null;
@@ -297,6 +298,7 @@ export function registerVRChatListeners(window: BrowserWindow) {
         type: "system",
         message: "VRChat launch initiated",
         timestamp: Date.now(),
+        i18nKey: "logVRChatLaunched",
       };
       LogBufferService.add(launchLog);
       sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, launchLog);
@@ -487,9 +489,56 @@ export function registerVRChatListeners(window: BrowserWindow) {
     SessionStatsService.clearSessions();
   });
 
+  // ─────────────────────────────────────────────────────────────────
+  // Webhook Settings Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.WEBHOOK_SETTINGS_GET, async (): Promise<WebhookSettings> => {
+    debugLog.ipc("WEBHOOK_SETTINGS_GET called");
+    return SettingsService.getWebhookSettings();
+  });
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.WEBHOOK_SETTINGS_SET,
+    async (_event, settings: Partial<WebhookSettings>): Promise<void> => {
+      debugLog.ipc(`WEBHOOK_SETTINGS_SET called: enabled=${settings.enabled}`);
+      SettingsService.setWebhookSettings(settings);
+      // Update the discord webhook service with new settings
+      discordWebhook.updateSettings(SettingsService.getWebhookSettings());
+    }
+  );
+
+  ipcMain.handle(VRCHAT_CHANNELS.WEBHOOK_SETTINGS_RESET, async (): Promise<WebhookSettings> => {
+    debugLog.ipc("WEBHOOK_SETTINGS_RESET called");
+    const defaults = SettingsService.resetWebhookSettings();
+    // Update the discord webhook service with reset settings
+    discordWebhook.updateSettings(defaults);
+    return defaults;
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Language Settings Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.LANGUAGE_GET, async (): Promise<"en" | "pl"> => {
+    debugLog.ipc("LANGUAGE_GET called");
+    return SettingsService.getLanguage();
+  });
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.LANGUAGE_SET,
+    async (_event, lang: "en" | "pl"): Promise<void> => {
+      debugLog.ipc(`LANGUAGE_SET called: ${lang}`);
+      SettingsService.setLanguage(lang);
+    }
+  );
+
   // Initialize services (cleanup old entries)
   InviteHistoryService.initialize();
   SessionStatsService.initialize();
+
+  // Initialize discord webhook with saved settings
+  discordWebhook.updateSettings(SettingsService.getWebhookSettings());
 
   // Set up tray service callbacks for context menu actions
   TrayService.onStartMonitoring = async () => {

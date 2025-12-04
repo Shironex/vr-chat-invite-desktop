@@ -1,10 +1,49 @@
 /**
  * Discord Webhook Service
  * Sends notifications to Discord via webhooks with batching support
+ * User-configurable webhook URLs stored in settings
  */
 
 import { DISCORD_WEBHOOKS, VRCHAT_GROUP } from "../../config/vrchat.config";
 import { debugLog } from "../debug-mode";
+import { SettingsService } from "./settings.service";
+import type { WebhookSettings } from "./vrchat-types";
+
+// Webhook translations for EN/PL
+const WEBHOOK_TRANSLATIONS = {
+  en: {
+    inviteSuccess: "Invite sent",
+    inviteSuccessDesc: "Player **{{displayName}}** was invited to group **{{groupName}}**",
+    skipped: "Player skipped",
+    skippedDesc: "Player **{{displayName}}** was skipped",
+    reason: "Reason",
+    rateLimit: "Rate limit",
+    rateLimitDesc: "Queue paused for **{{minutes}} minutes** due to rate limiting",
+    error: "Error",
+    details: "Details",
+    authSuccess: "Logged in",
+    authSuccessDesc: "Successfully logged in as **{{displayName}}**",
+    monitorStarted: "Monitoring started",
+    monitorStartedDesc: "Started monitoring VRChat logs for group **{{groupName}}**",
+    userId: "User ID",
+  },
+  pl: {
+    inviteSuccess: "Zaproszenie wysłane",
+    inviteSuccessDesc: "Gracz **{{displayName}}** został zaproszony do grupy **{{groupName}}**",
+    skipped: "Pominięto gracza",
+    skippedDesc: "Gracz **{{displayName}}** został pominięty",
+    reason: "Powód",
+    rateLimit: "Limit zapytań",
+    rateLimitDesc: "Kolejka wstrzymana na **{{minutes}} minut** z powodu limitu zapytań",
+    error: "Błąd",
+    details: "Szczegóły",
+    authSuccess: "Zalogowano",
+    authSuccessDesc: "Pomyślnie zalogowano jako **{{displayName}}**",
+    monitorStarted: "Monitorowanie rozpoczęte",
+    monitorStartedDesc: "Rozpoczęto monitorowanie logów VRChat dla grupy **{{groupName}}**",
+    userId: "User ID",
+  },
+} as const;
 
 interface DiscordEmbed {
   title?: string;
@@ -47,25 +86,60 @@ class DiscordWebhookService {
   private batchTimer: NodeJS.Timeout | null = null;
   private isProcessing = false;
 
+  // User-configurable webhook settings (defaults to disabled)
+  private settings: WebhookSettings = {
+    enabled: false,
+    successUrl: "",
+    warningUrl: "",
+    errorUrl: "",
+  };
+
   /**
-   * Check if webhooks are configured
+   * Get translation strings based on current language setting
+   */
+  private getTranslations() {
+    const lang = SettingsService.getLanguage();
+    return WEBHOOK_TRANSLATIONS[lang];
+  }
+
+  /**
+   * Replace template variables in a string
+   */
+  private interpolate(template: string, vars: Record<string, string | number>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => String(vars[key] ?? ""));
+  }
+
+  /**
+   * Update webhook settings from user configuration
+   */
+  updateSettings(newSettings: WebhookSettings): void {
+    this.settings = { ...newSettings };
+    debugLog.info(`Discord webhook settings updated: enabled=${this.settings.enabled}`);
+  }
+
+  /**
+   * Check if webhooks are configured and enabled
    */
   private isConfigured(type: WebhookType): boolean {
+    // Must be enabled first
+    if (!this.settings.enabled) {
+      return false;
+    }
     const url = this.getWebhookUrl(type);
     return url !== null && url.startsWith("https://discord.com/api/webhooks/");
   }
 
   /**
-   * Get webhook URL by type
+   * Get webhook URL by type (from user settings)
    */
   private getWebhookUrl(type: WebhookType): string | null {
     switch (type) {
       case "success":
-        return DISCORD_WEBHOOKS.SUCCESS || null;
+        return this.settings.successUrl || null;
       case "warning":
-        return DISCORD_WEBHOOKS.WARNING || null;
+        return this.settings.warningUrl || null;
       case "error":
-        return DISCORD_WEBHOOKS.ERROR || null;
+        return this.settings.errorUrl || null;
       default:
         return null;
     }
@@ -80,13 +154,17 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "✅ Zaproszenie wysłane",
-      description: `Gracz **${displayName}** został zaproszony do grupy **${VRCHAT_GROUP.GROUP_NAME}**`,
+      title: `✅ ${t.inviteSuccess}`,
+      description: this.interpolate(t.inviteSuccessDesc, {
+        displayName,
+        groupName: VRCHAT_GROUP.GROUP_NAME,
+      }),
       color: COLORS.success,
       fields: [
         {
-          name: "User ID",
+          name: t.userId,
           value: `\`${userId}\``,
           inline: true,
         },
@@ -106,18 +184,19 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "⏭️ Pominięto gracza",
-      description: `Gracz **${displayName}** został pominięty`,
+      title: `⏭️ ${t.skipped}`,
+      description: this.interpolate(t.skippedDesc, { displayName }),
       color: COLORS.warning,
       fields: [
         {
-          name: "Powód",
+          name: t.reason,
           value: reason,
           inline: true,
         },
         {
-          name: "User ID",
+          name: t.userId,
           value: `\`${userId}\``,
           inline: true,
         },
@@ -137,9 +216,12 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "⚠️ Limit zapytań",
-      description: `Kolejka wstrzymana na **${Math.round(pauseDuration / 60)} minut** z powodu limitu zapytań`,
+      title: `⚠️ ${t.rateLimit}`,
+      description: this.interpolate(t.rateLimitDesc, {
+        minutes: Math.round(pauseDuration / 60),
+      }),
       color: COLORS.warning,
       timestamp: new Date().toISOString(),
     };
@@ -156,14 +238,15 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "❌ Błąd",
+      title: `❌ ${t.error}`,
       description: message,
       color: COLORS.error,
       fields: details
         ? [
             {
-              name: "Szczegóły",
+              name: t.details,
               value: `\`\`\`${details.substring(0, 1000)}\`\`\``,
               inline: false,
             },
@@ -184,9 +267,10 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "🔐 Zalogowano",
-      description: `Pomyślnie zalogowano jako **${displayName}**`,
+      title: `🔐 ${t.authSuccess}`,
+      description: this.interpolate(t.authSuccessDesc, { displayName }),
       color: COLORS.success,
       timestamp: new Date().toISOString(),
     };
@@ -203,9 +287,12 @@ class DiscordWebhookService {
       return;
     }
 
+    const t = this.getTranslations();
     const embed: DiscordEmbed = {
-      title: "👁️ Monitorowanie rozpoczęte",
-      description: `Rozpoczęto monitorowanie logów VRChat dla grupy **${VRCHAT_GROUP.GROUP_NAME}**`,
+      title: `👁️ ${t.monitorStarted}`,
+      description: this.interpolate(t.monitorStartedDesc, {
+        groupName: VRCHAT_GROUP.GROUP_NAME,
+      }),
       color: COLORS.success,
       timestamp: new Date().toISOString(),
     };

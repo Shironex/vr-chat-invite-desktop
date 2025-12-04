@@ -13,6 +13,8 @@ import type { VRChatGroup, GroupInviteResponse } from "./vrchat-types";
  * VRChat API Service Singleton
  */
 class VRChatApiServiceClass {
+  private static readonly REQUEST_TIMEOUT = 10000; // 10 seconds
+
   /**
    * Make authenticated HTTP request to VRChat API
    */
@@ -30,6 +32,13 @@ class VRChatApiServiceClass {
         url,
       });
 
+      // Set timeout to prevent hanging requests
+      const timeoutId = setTimeout(() => {
+        request.abort();
+        debugLog.error(`Request timeout after ${VRChatApiServiceClass.REQUEST_TIMEOUT}ms: ${url}`);
+        reject(new Error(`Request timeout after ${VRChatApiServiceClass.REQUEST_TIMEOUT}ms`));
+      }, VRChatApiServiceClass.REQUEST_TIMEOUT);
+
       // Set headers
       const authHeaders = VRChatAuthService.getAuthHeaders();
       for (const [key, value] of Object.entries(authHeaders)) {
@@ -41,6 +50,7 @@ class VRChatApiServiceClass {
       let responseStatus = 0;
 
       request.on("response", (response) => {
+        clearTimeout(timeoutId);
         responseStatus = response.statusCode;
 
         response.on("data", (chunk) => {
@@ -58,6 +68,7 @@ class VRChatApiServiceClass {
       });
 
       request.on("error", (error) => {
+        clearTimeout(timeoutId);
         debugLog.error(`Request error: ${error.message}`);
         reject(error);
       });

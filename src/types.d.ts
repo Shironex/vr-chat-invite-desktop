@@ -236,6 +236,17 @@ interface TraySettings {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Webhook Types
+// ─────────────────────────────────────────────────────────────────
+
+interface WebhookSettings {
+  enabled: boolean;
+  successUrl: string;
+  warningUrl: string;
+  errorUrl: string;
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Session Statistics Types
 // ─────────────────────────────────────────────────────────────────
 
@@ -333,6 +344,15 @@ interface VRChatAPI {
   getSessionStats: (options?: SessionStatsQueryOptions) => Promise<SessionStatsResponse>;
   getActiveSession: () => Promise<SessionData | null>;
   clearSessionStats: () => Promise<void>;
+
+  // Webhook Settings
+  getWebhookSettings: () => Promise<WebhookSettings>;
+  setWebhookSettings: (settings: Partial<WebhookSettings>) => Promise<void>;
+  resetWebhookSettings: () => Promise<WebhookSettings>;
+
+  // Language Settings
+  getLanguage: () => Promise<"en" | "pl">;
+  setLanguage: (lang: "en" | "pl") => Promise<void>;
 
   // Log Buffer
   getLogBuffer: () => Promise<InviterLogEntry[]>;

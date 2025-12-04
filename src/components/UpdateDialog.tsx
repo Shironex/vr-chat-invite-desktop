@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
+import DOMPurify from "dompurify";
 import {
   Dialog,
   DialogContent,
@@ -25,11 +26,11 @@ function ReleaseNotes({ content }: { content: string }) {
     "prose prose-sm dark:prose-invert max-w-none prose-headings:my-2 prose-headings:font-semibold prose-h1:text-lg prose-h2:text-base prose-h3:text-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-strong:text-foreground prose-code:bg-muted prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-code:text-xs";
 
   if (isHtmlContent(content)) {
-    // GitHub returns HTML - render it directly
+    // GitHub returns HTML - sanitize and render it
     return (
       <div
         className={proseClasses}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
       />
     );
   }

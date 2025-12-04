@@ -24,6 +24,7 @@ import type {
   SessionData,
   SessionStatsQueryOptions,
   SessionStatsResponse,
+  WebhookSettings,
 } from "../../vrchat/vrchat-types";
 
 export function exposeVRChatContext() {
@@ -259,6 +260,44 @@ export function exposeVRChatContext() {
      */
     clearSessionStats: (): Promise<void> =>
       ipcRenderer.invoke(VRCHAT_CHANNELS.SESSION_STATS_CLEAR),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Webhook Settings
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get webhook settings
+     */
+    getWebhookSettings: (): Promise<WebhookSettings> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.WEBHOOK_SETTINGS_GET),
+
+    /**
+     * Update webhook settings
+     */
+    setWebhookSettings: (settings: Partial<WebhookSettings>): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.WEBHOOK_SETTINGS_SET, settings),
+
+    /**
+     * Reset webhook settings to defaults (disabled)
+     */
+    resetWebhookSettings: (): Promise<WebhookSettings> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.WEBHOOK_SETTINGS_RESET),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Language Settings
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get current app language
+     */
+    getLanguage: (): Promise<"en" | "pl"> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.LANGUAGE_GET),
+
+    /**
+     * Set app language
+     */
+    setLanguage: (lang: "en" | "pl"): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.LANGUAGE_SET, lang),
 
     // ─────────────────────────────────────────────────────────────────
     // Log Buffer

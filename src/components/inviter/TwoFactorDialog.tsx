@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, KeyRound, Mail, Smartphone } from "lucide-react";
+import { Loader2, Mail, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,13 +36,13 @@ export function TwoFactorDialog({
 }: TwoFactorDialogProps) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
-  const [selectedMethod, setSelectedMethod] = useState<"totp" | "emailotp" | "otp">(() => {
-    // Default to TOTP if available, otherwise emailotp
+  // Auto-select 2FA method: TOTP (authenticator) has priority over email
+  const selectedMethod = (() => {
     const methodsLower = methods.map((m) => m.toLowerCase());
-    if (methodsLower.includes("totp")) return "totp";
-    if (methodsLower.includes("emailotp")) return "emailotp";
-    return "otp";
-  });
+    if (methodsLower.includes("totp")) return "totp" as const;
+    if (methodsLower.includes("emailotp")) return "emailotp" as const;
+    return "otp" as const;
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,16 +50,16 @@ export function TwoFactorDialog({
     await onVerify(selectedMethod, code.trim());
   };
 
-  const methodsLower = methods.map((m) => m.toLowerCase());
-  const hasTOTP = methodsLower.includes("totp");
-  const hasEmail = methodsLower.includes("emailotp") || methodsLower.includes("otp");
-
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5" />
+            {selectedMethod === "totp" ? (
+              <Smartphone className="h-5 w-5" />
+            ) : (
+              <Mail className="h-5 w-5" />
+            )}
             {t("twoFactorTitle")}
           </DialogTitle>
           <DialogDescription>
@@ -68,32 +68,6 @@ export function TwoFactorDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Method Selection (if multiple available) */}
-          {hasTOTP && hasEmail && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={selectedMethod === "totp" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setSelectedMethod("totp")}
-                disabled={isLoading}
-              >
-                <Smartphone className="mr-2 h-4 w-4" />
-                {t("twoFactorAuthenticator")}
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMethod === "emailotp" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setSelectedMethod("emailotp")}
-                disabled={isLoading}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                {t("twoFactorEmail")}
-              </Button>
-            </div>
-          )}
-
           {/* Method Info */}
           <div className="bg-muted/50 rounded-md p-3 text-sm">
             {selectedMethod === "totp" ? (

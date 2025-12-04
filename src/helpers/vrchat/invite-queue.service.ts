@@ -6,6 +6,7 @@
 
 import { debugLog } from "../debug-mode";
 import { VRChatApiService } from "./vrchat-api.service";
+import { VRChatAuthService } from "./vrchat-auth.service";
 import { SettingsService } from "./settings.service";
 import { discordWebhook } from "./discord-webhook.service";
 import type {
@@ -71,6 +72,14 @@ class InviteQueueServiceClass {
    * Add a user to the invite queue
    */
   add(userId: string, displayName: string): boolean {
+    // Skip self - don't invite the logged-in user
+    const currentUserId = VRChatAuthService.getUserId();
+    if (currentUserId && userId === currentUserId) {
+      debugLog.info(`Skipping self (${displayName}) - cannot invite yourself`);
+      this.emitLog("skip", `Skipped self: ${displayName}`, userId, displayName, "logSkippedSelf", { name: displayName });
+      return false;
+    }
+
     // Check if already in cache (already invited or pending)
     if (this.invitedCache.has(userId)) {
       debugLog.info(`User ${displayName} already in queue/invited`);

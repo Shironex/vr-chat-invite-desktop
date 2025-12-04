@@ -9,11 +9,23 @@ import * as path from "path";
 import { debugLog } from "../debug-mode";
 import { DEFAULT_RATE_LIMITS } from "../../config/vrchat.config";
 import { TRAY_CONFIG } from "../../config/app.config";
-import type { RateLimitSettings, TraySettings } from "./vrchat-types";
+import type { RateLimitSettings, TraySettings, WebhookSettings } from "./vrchat-types";
 
 const SETTINGS_KEY = "rate-limit-settings";
 const VRCHAT_PATH_KEY = "vrchat-path";
 const TRAY_SETTINGS_KEY = "tray-settings";
+const WEBHOOK_SETTINGS_KEY = "webhook-settings";
+const LANGUAGE_KEY = "app-language";
+
+/**
+ * Default webhook settings - disabled by default
+ */
+export const DEFAULT_WEBHOOK_SETTINGS: WebhookSettings = {
+  enabled: false,
+  successUrl: "",
+  warningUrl: "",
+  errorUrl: "",
+};
 
 // Settings store
 const store = new Store({
@@ -185,6 +197,87 @@ class SettingsServiceClass {
     store.delete(TRAY_SETTINGS_KEY);
     debugLog.info("Tray settings reset to defaults");
     return { ...TRAY_CONFIG.defaults };
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Webhook Settings
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Get current webhook settings
+   */
+  getWebhookSettings(): WebhookSettings {
+    const saved = store.get(WEBHOOK_SETTINGS_KEY) as Partial<WebhookSettings> | undefined;
+
+    // Merge with defaults to ensure all fields exist
+    const settings: WebhookSettings = {
+      enabled: saved?.enabled ?? DEFAULT_WEBHOOK_SETTINGS.enabled,
+      successUrl: saved?.successUrl ?? DEFAULT_WEBHOOK_SETTINGS.successUrl,
+      warningUrl: saved?.warningUrl ?? DEFAULT_WEBHOOK_SETTINGS.warningUrl,
+      errorUrl: saved?.errorUrl ?? DEFAULT_WEBHOOK_SETTINGS.errorUrl,
+    };
+
+    return settings;
+  }
+
+  /**
+   * Update webhook settings
+   */
+  setWebhookSettings(partial: Partial<WebhookSettings>): void {
+    const current = this.getWebhookSettings();
+    const updated: WebhookSettings = {
+      ...current,
+      ...partial,
+    };
+
+    // Validate webhook URLs (basic format check)
+    const isValidUrl = (url: string) =>
+      !url || url.startsWith("https://discord.com/api/webhooks/");
+
+    if (!isValidUrl(updated.successUrl)) {
+      debugLog.warn("Invalid success webhook URL, clearing");
+      updated.successUrl = "";
+    }
+    if (!isValidUrl(updated.warningUrl)) {
+      debugLog.warn("Invalid warning webhook URL, clearing");
+      updated.warningUrl = "";
+    }
+    if (!isValidUrl(updated.errorUrl)) {
+      debugLog.warn("Invalid error webhook URL, clearing");
+      updated.errorUrl = "";
+    }
+
+    store.set(WEBHOOK_SETTINGS_KEY, updated);
+    debugLog.info(`Webhook settings updated: enabled=${updated.enabled}`);
+  }
+
+  /**
+   * Reset webhook settings to defaults (disabled)
+   */
+  resetWebhookSettings(): WebhookSettings {
+    store.delete(WEBHOOK_SETTINGS_KEY);
+    debugLog.info("Webhook settings reset to defaults");
+    return { ...DEFAULT_WEBHOOK_SETTINGS };
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Language Settings
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Get current language (defaults to 'en')
+   */
+  getLanguage(): "en" | "pl" {
+    const saved = store.get(LANGUAGE_KEY) as string | undefined;
+    return saved === "pl" ? "pl" : "en";
+  }
+
+  /**
+   * Set app language
+   */
+  setLanguage(lang: "en" | "pl"): void {
+    store.set(LANGUAGE_KEY, lang);
+    debugLog.info(`Language set to: ${lang}`);
   }
 }
 

@@ -74,6 +74,15 @@ export const VRCHAT_CHANNELS = {
   SESSION_STATS_GET_ACTIVE: "vrchat:session:getActive",
   SESSION_STATS_CLEAR: "vrchat:session:clear",
   SESSION_STATS_UPDATED: "vrchat:session:updated",
+
+  // Webhook Settings
+  WEBHOOK_SETTINGS_GET: "vrchat:webhooks:get",
+  WEBHOOK_SETTINGS_SET: "vrchat:webhooks:set",
+  WEBHOOK_SETTINGS_RESET: "vrchat:webhooks:reset",
+
+  // Language Settings
+  LANGUAGE_GET: "vrchat:language:get",
+  LANGUAGE_SET: "vrchat:language:set",
 } as const;
 
 export type VRChatChannel =

@@ -69,6 +69,9 @@ package-lock.json
 .env
 .env.test
 
+# Secrets configuration (contains encryption key)
+src/config/secrets.config.ts
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 

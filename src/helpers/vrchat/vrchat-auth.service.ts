@@ -8,6 +8,7 @@ import { authenticator } from "otplib";
 import { net } from "electron";
 import { debugLog } from "../debug-mode";
 import { VRCHAT_API, SESSION_CONFIG } from "../../config/vrchat.config";
+import { ENCRYPTION_KEY } from "../../config/secrets.config";
 import type {
   VRChatAuthState,
   VRChatLoginCredentials,
@@ -19,13 +20,15 @@ import type {
 // Encrypted store for session data
 const store = new Store({
   name: "vrchat-session",
-  encryptionKey: "vrc-group-inviter-secret-key-v1",
+  encryptionKey: ENCRYPTION_KEY,
 });
 
 /**
  * VRChat Authentication Service Singleton
  */
 class VRChatAuthServiceClass {
+  private static readonly REQUEST_TIMEOUT = 15000; // 15 seconds for auth requests
+
   private authCookie: string | null = null;
   private twoFactorAuthCookie: string | null = null;
   private userId: string | null = null;
@@ -128,6 +131,13 @@ class VRChatAuthServiceClass {
         url,
       });
 
+      // Set timeout to prevent hanging requests
+      const timeoutId = setTimeout(() => {
+        request.abort();
+        debugLog.error(`Request timeout after ${VRChatAuthServiceClass.REQUEST_TIMEOUT}ms: ${url}`);
+        reject(new Error(`Request timeout after ${VRChatAuthServiceClass.REQUEST_TIMEOUT}ms`));
+      }, VRChatAuthServiceClass.REQUEST_TIMEOUT);
+
       // Set headers
       request.setHeader("User-Agent", VRCHAT_API.USER_AGENT);
       request.setHeader("Content-Type", "application/json");
@@ -148,6 +158,7 @@ class VRChatAuthServiceClass {
       const responseCookies: string[] = [];
 
       request.on("response", (response) => {
+        clearTimeout(timeoutId);
         responseStatus = response.statusCode;
 
         // Extract cookies
@@ -175,6 +186,7 @@ class VRChatAuthServiceClass {
       });
 
       request.on("error", (error) => {
+        clearTimeout(timeoutId);
         debugLog.error(`Request error: ${error.message}`);
         reject(error);
       });

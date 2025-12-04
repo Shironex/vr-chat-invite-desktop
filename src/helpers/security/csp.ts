@@ -26,11 +26,13 @@ const CSP_POLICY = {
     "'unsafe-inline'", // Required for Tailwind CSS and dynamic styles
   ],
 
-  // Images: allow self, data URIs, and localhost (for dev server)
+  // Images: allow self, data URIs, localhost (for dev server), and VRChat (for avatars)
   "img-src": [
     "'self'",
     "data:",
     "http://localhost:*", // Vite dev server
+    "https://api.vrchat.cloud", // VRChat API images
+    "https://files.vrchat.cloud", // VRChat avatar thumbnails
   ],
 
   // Fonts: allow self and data URIs
@@ -122,6 +124,12 @@ export function preventExternalNavigation(): void {
 
       // Allow VRChat API for authentication and invites
       if (url.hostname === "api.vrchat.cloud") {
+        callback({});
+        return;
+      }
+
+      // Allow VRChat files CDN for avatars/thumbnails
+      if (url.hostname === "files.vrchat.cloud") {
         callback({});
         return;
       }

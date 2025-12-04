@@ -20,6 +20,7 @@ type OnPlayerJoinCallback = (player: DetectedPlayer) => void;
  */
 class LogMonitorServiceClass {
   private isRunning = false;
+  private isReading = false; // Mutex to prevent concurrent readNewLines calls
   private logDirectory: string | null = null;
   private currentLogFile: string | null = null;
   private fileHandle: fs.promises.FileHandle | null = null;
@@ -135,10 +136,14 @@ class LogMonitorServiceClass {
 
   /**
    * Read new lines from the log file
+   * Uses mutex to prevent concurrent calls from watcher and poll interval
    */
   private async readNewLines(): Promise<void> {
+    // Mutex: prevent concurrent reads
+    if (this.isReading) return;
     if (!this.currentLogFile || !this.fileHandle) return;
 
+    this.isReading = true;
     try {
       // Get current file size
       const stats = fs.statSync(this.currentLogFile);
@@ -175,6 +180,8 @@ class LogMonitorServiceClass {
       }
     } catch (error) {
       debugLog.error(`Error reading log file: ${error}`);
+    } finally {
+      this.isReading = false;
     }
   }
 

@@ -28,19 +28,11 @@ export const VRCHAT_GROUP = {
 } as const;
 
 /**
- * Discord Webhook Configuration (optional)
- * Leave empty strings to disable notifications
+ * Discord Webhook Configuration
+ * NOTE: Webhook URLs are now configured in Settings > Discord Webhooks
+ * These are just the batch processing parameters
  */
 export const DISCORD_WEBHOOKS = {
-  // Webhook for successful invites
-  SUCCESS: "https://discord.com/api/webhooks/1445847402262298716/tSIf_MwydvHQOoQsawfblz0b6wFur7WF_Kdnsio9tl3_IJxsyqHXGkoke3Kb45ErmX8W",
-
-  // Webhook for warnings (skipped invites, rate limits)
-  WARNING: "https://discord.com/api/webhooks/1445847542033289328/7YiBeJkfnekorBDCzQsQEL0P-gi4olzlk9e7gbrEE0wO4VWt7yL079beqW_YyzVXFgEY",
-
-  // Webhook for errors (API errors, auth failures)
-  ERROR: "https://discord.com/api/webhooks/1445847615106187406/A8z3iTgqLmDMkQ2OmTKBS5dp1BDTvi-cLLEJXvwrZsuCJNDwkwu1oZixYEEJ8jetJPtN",
-
   // Batch delay before sending webhooks (seconds)
   BATCH_DELAY: 5,
 

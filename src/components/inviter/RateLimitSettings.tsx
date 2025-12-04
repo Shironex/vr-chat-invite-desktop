@@ -5,8 +5,9 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, RotateCcw, Save, Info, FolderOpen, RefreshCw, Gamepad2, CheckCircle2, XCircle, MonitorDown, Bell } from "lucide-react";
+import { Loader2, RotateCcw, Save, Info, FolderOpen, RefreshCw, Gamepad2, CheckCircle2, XCircle, MonitorDown, Bell, Webhook } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -89,18 +90,28 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
     showDesktopNotifications: true,
   });
 
+  // Webhook settings state
+  const [webhookSettings, setWebhookSettings] = useState({
+    enabled: false,
+    successUrl: "",
+    warningUrl: "",
+    errorUrl: "",
+  });
+
   // Load settings on mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [loaded, path, tray] = await Promise.all([
+        const [loaded, path, tray, webhooks] = await Promise.all([
           window.vrchatAPI.getSettings(),
           window.vrchatAPI.getVRChatPath(),
           window.trayAPI.getSettings(),
+          window.vrchatAPI.getWebhookSettings(),
         ]);
         setSettings(loaded);
         setVrchatPath(path);
         setTraySettings(tray);
+        setWebhookSettings(webhooks);
       } catch (error) {
         console.error("Failed to load settings:", error);
       } finally {
@@ -292,6 +303,102 @@ export function RateLimitSettings({ className }: RateLimitSettingsProps) {
             }}
           />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Discord Webhook Settings Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Webhook className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">{t("webhookTitle")}</h2>
+        </div>
+        <p className="text-muted-foreground text-sm">
+          {t("webhookDescription")}
+        </p>
+
+        {/* Enable Webhooks Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label className="text-sm">{t("webhookEnable")}</Label>
+            <p className="text-muted-foreground text-xs">
+              {t("webhookEnableHint")}
+            </p>
+          </div>
+          <Switch
+            checked={webhookSettings.enabled}
+            onCheckedChange={async (checked) => {
+              const updated = { ...webhookSettings, enabled: checked };
+              setWebhookSettings(updated);
+              await window.vrchatAPI.setWebhookSettings({ enabled: checked });
+            }}
+          />
+        </div>
+
+        {/* Webhook URLs (only shown when enabled) */}
+        {webhookSettings.enabled && (
+          <div className="space-y-4 rounded-lg border p-4">
+            {/* Success Webhook URL */}
+            <div className="space-y-2">
+              <Label className="text-sm">{t("webhookSuccessUrl")}</Label>
+              <Input
+                type="url"
+                placeholder="https://discord.com/api/webhooks/..."
+                value={webhookSettings.successUrl}
+                onChange={(e) => {
+                  const updated = { ...webhookSettings, successUrl: e.target.value };
+                  setWebhookSettings(updated);
+                }}
+                onBlur={async () => {
+                  await window.vrchatAPI.setWebhookSettings({ successUrl: webhookSettings.successUrl });
+                }}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t("webhookSuccessUrlHint")}
+              </p>
+            </div>
+
+            {/* Warning Webhook URL */}
+            <div className="space-y-2">
+              <Label className="text-sm">{t("webhookWarningUrl")}</Label>
+              <Input
+                type="url"
+                placeholder="https://discord.com/api/webhooks/..."
+                value={webhookSettings.warningUrl}
+                onChange={(e) => {
+                  const updated = { ...webhookSettings, warningUrl: e.target.value };
+                  setWebhookSettings(updated);
+                }}
+                onBlur={async () => {
+                  await window.vrchatAPI.setWebhookSettings({ warningUrl: webhookSettings.warningUrl });
+                }}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t("webhookWarningUrlHint")}
+              </p>
+            </div>
+
+            {/* Error Webhook URL */}
+            <div className="space-y-2">
+              <Label className="text-sm">{t("webhookErrorUrl")}</Label>
+              <Input
+                type="url"
+                placeholder="https://discord.com/api/webhooks/..."
+                value={webhookSettings.errorUrl}
+                onChange={(e) => {
+                  const updated = { ...webhookSettings, errorUrl: e.target.value };
+                  setWebhookSettings(updated);
+                }}
+                onBlur={async () => {
+                  await window.vrchatAPI.setWebhookSettings({ errorUrl: webhookSettings.errorUrl });
+                }}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t("webhookErrorUrlHint")}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <Separator />
