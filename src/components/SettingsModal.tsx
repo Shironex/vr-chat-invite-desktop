@@ -330,7 +330,7 @@ export default function SettingsModal() {
           <Settings className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-2xl h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("settingsTitle")}</DialogTitle>
           <DialogDescription>{t("settingsDescription")}</DialogDescription>
@@ -362,7 +362,7 @@ export default function SettingsModal() {
                 </TabsTrigger>
               </TabsList>
 
-              <ScrollArea className="flex-1 mt-4">
+              <ScrollArea className="flex-1 mt-4 pr-4">
                 {/* ─────────────────────────────────────────────────────────────────
                     General Tab
                 ───────────────────────────────────────────────────────────────── */}
