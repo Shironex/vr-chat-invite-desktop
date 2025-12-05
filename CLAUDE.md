@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -22,6 +22,15 @@ This file provides guidance to Claude Code when working with code in this reposi
 - `pnpm run dev` - Start with debug mode (opens debug console window)
 - `pnpm run lint` - Run ESLint
 - `pnpm run format:write` - Format all code
+- `pnpm exec tsc --noEmit` - Type check without emitting files
+
+### Testing
+- `pnpm test` - Run unit tests once (Vitest)
+- `pnpm test:watch` - Run unit tests in watch mode
+- `pnpm test:e2e` - Run Playwright E2E tests
+- `pnpm test:all` - Run all tests (unit + E2E)
+
+Unit tests are in `src/tests/unit/`, E2E tests in `src/tests/e2e/`.
 
 ### Building
 - `pnpm run dist:dir` - Build and package without installer (fast, for testing)
@@ -94,6 +103,11 @@ This file provides guidance to Claude Code when working with code in this reposi
 - `APP_NAME` - "VRChat Group Inviter"
 - `APP_ID` - Windows notification ID
 - Window dimensions and titles
+
+**secrets.config.ts** - Encryption key for session storage. Regenerate for production deployments:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 ## Key Patterns
 
