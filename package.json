@@ -23,11 +23,11 @@
     "test:e2e": "playwright test",
     "test:all": "vitest run && playwright test"
   },
-  "author": "Your Name <your.email@example.com>",
+  "author": "Shironex <kacperlachowiczwp.pl@wp.pl>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/your-repo.git"
+    "url": "https://github.com/Shironex/vr-chat-invite-desktop.git"
   },
   "build": {
     "appId": "com.vrchat.group-inviter",
@@ -61,8 +61,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "yourusername",
-      "repo": "vrchat-group-inviter"
+      "owner": "Shironex",
+      "repo": "vr-chat-invite-desktop"
     }
   },
   "devDependencies": {
