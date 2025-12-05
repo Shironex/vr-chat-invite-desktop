@@ -26,7 +26,7 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStarted: "Monitoring started",
     monitorStartedDesc: "Started monitoring VRChat logs for group **{{groupName}}**",
     userId: "User ID",
-    sentBy: "Sent by {{operatorName}}",
+    sentBy: "Sent by",
   },
   pl: {
     inviteSuccess: "Zaproszenie wysłane",
@@ -43,7 +43,7 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStarted: "Monitorowanie rozpoczęte",
     monitorStartedDesc: "Rozpoczęto monitorowanie logów VRChat dla grupy **{{groupName}}**",
     userId: "User ID",
-    sentBy: "Wysłane przez {{operatorName}}",
+    sentBy: "Wysłane przez",
   },
 } as const;
 
@@ -131,13 +131,15 @@ class DiscordWebhookService {
   }
 
   /**
-   * Get footer with operator attribution
+   * Get operator field for embed attribution (with bold name)
    */
-  private getOperatorFooter(): { text: string } | undefined {
+  private getOperatorField(): { name: string; value: string; inline: boolean } | undefined {
     if (!this.operatorName) return undefined;
     const t = this.getTranslations();
     return {
-      text: this.interpolate(t.sentBy, { operatorName: this.operatorName }),
+      name: t.sentBy,
+      value: `**${this.operatorName}**`,
+      inline: true,
     };
   }
 
@@ -179,6 +181,7 @@ class DiscordWebhookService {
     }
 
     const t = this.getTranslations();
+    const operatorField = this.getOperatorField();
     const embed: DiscordEmbed = {
       title: `✅ ${t.inviteSuccess}`,
       description: this.interpolate(t.inviteSuccessDesc, {
@@ -192,8 +195,8 @@ class DiscordWebhookService {
           value: `\`${userId}\``,
           inline: true,
         },
+        ...(operatorField ? [operatorField] : []),
       ],
-      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 
@@ -210,6 +213,7 @@ class DiscordWebhookService {
     }
 
     const t = this.getTranslations();
+    const operatorField = this.getOperatorField();
     const embed: DiscordEmbed = {
       title: `⏭️ ${t.skipped}`,
       description: this.interpolate(t.skippedDesc, { displayName }),
@@ -225,8 +229,8 @@ class DiscordWebhookService {
           value: `\`${userId}\``,
           inline: true,
         },
+        ...(operatorField ? [operatorField] : []),
       ],
-      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 
@@ -243,13 +247,14 @@ class DiscordWebhookService {
     }
 
     const t = this.getTranslations();
+    const operatorField = this.getOperatorField();
     const embed: DiscordEmbed = {
       title: `⚠️ ${t.rateLimit}`,
       description: this.interpolate(t.rateLimitDesc, {
         minutes: Math.round(pauseDuration / 60),
       }),
       color: COLORS.warning,
-      footer: this.getOperatorFooter(),
+      fields: operatorField ? [operatorField] : undefined,
       timestamp: new Date().toISOString(),
     };
 
@@ -266,20 +271,25 @@ class DiscordWebhookService {
     }
 
     const t = this.getTranslations();
+    const operatorField = this.getOperatorField();
+    const fields: Array<{ name: string; value: string; inline?: boolean }> = [];
+
+    if (details) {
+      fields.push({
+        name: t.details,
+        value: `\`\`\`${details.substring(0, 1000)}\`\`\``,
+        inline: false,
+      });
+    }
+    if (operatorField) {
+      fields.push(operatorField);
+    }
+
     const embed: DiscordEmbed = {
       title: `❌ ${t.error}`,
       description: message,
       color: COLORS.error,
-      fields: details
-        ? [
-            {
-              name: t.details,
-              value: `\`\`\`${details.substring(0, 1000)}\`\`\``,
-              inline: false,
-            },
-          ]
-        : undefined,
-      footer: this.getOperatorFooter(),
+      fields: fields.length > 0 ? fields : undefined,
       timestamp: new Date().toISOString(),
     };
 
