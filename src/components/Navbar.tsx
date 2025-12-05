@@ -92,6 +92,17 @@ export default function Navbar() {
               <span className="hidden md:inline">{t("navHome")}</span>
             </Button>
           </Link>
+          <Link to="/instance-monitor">
+            <Button
+              variant={isActive("/instance-monitor") ? "default" : "ghost"}
+              size="sm"
+              className="gap-2"
+              title={t("navInstanceMonitor")}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t("navInstanceMonitor")}</span>
+            </Button>
+          </Link>
           <Link to="/statistics">
             <Button
               variant={isActive("/statistics") ? "default" : "ghost"}
@@ -112,17 +123,6 @@ export default function Navbar() {
             >
               <History className="h-4 w-4 shrink-0" />
               <span className="hidden md:inline">{t("navHistory")}</span>
-            </Button>
-          </Link>
-          <Link to="/instance-monitor">
-            <Button
-              variant={isActive("/instance-monitor") ? "default" : "ghost"}
-              size="sm"
-              className="gap-2"
-              title={t("navInstanceMonitor")}
-            >
-              <Users className="h-4 w-4 shrink-0" />
-              <span className="hidden md:inline">{t("navInstanceMonitor")}</span>
             </Button>
           </Link>
         </div>

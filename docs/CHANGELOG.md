@@ -7,6 +7,13 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.2] - 2025-12-05
+
+### Zmienione
+- Przeniesiono przycisk "Monitor instancji" obok "Zapraszanie" w nawigacji
+
+---
+
 ## [1.2.1] - 2025-12-05
 
 ### Zmienione
