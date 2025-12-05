@@ -7,6 +7,13 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.5] - 2025-12-05
+
+### Zmienione
+- Usunięto 24 nieużywane tłumaczenia z szablonu startowego (welcome page, features, itp.)
+
+---
+
 ## [1.2.4] - 2025-12-05
 
 ### Dodane
