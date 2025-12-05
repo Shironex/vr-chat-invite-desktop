@@ -20,6 +20,15 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Nie wymaga logowania do VRChat API
 - Nowy przycisk "Monitor instancji" w nawigacji
 - Tłumaczenia PL/EN dla monitora instancji
+- **Scentralizowane ustawienia** - nowy modal ustawień z zakładkami
+  - Wszystkie ustawienia w jednym miejscu (język, motyw, VRChat, tray, limity, webhooki)
+  - Zakładki: Ogólne, Aplikacja, Zapraszanie, Monitor
+  - Przycisk "Zapisz ustawienia" do zatwierdzenia zmian
+  - Wszystkie ustawienia zapisywane w electron-store (nie localStorage)
+
+### Zmienione
+- Usunięto przycisk ustawień z panelu zapraszania (ustawienia teraz w nawigacji)
+- Usunięto osobny widok ustawień webhooka z monitora instancji
 
 ### Naprawione
 - Poprawione parsowanie nazwy świata z logów VRChat (obsługa końcówek linii Windows)

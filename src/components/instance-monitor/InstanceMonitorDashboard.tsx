@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { InstanceStatsBar } from "./InstanceStatsBar";
 import { InstanceControls } from "./InstanceControls";
 import { InstanceLogs } from "./InstanceLogs";
-import { InstanceSettings } from "./InstanceSettings";
 import { cn } from "@/utils/tailwind";
 import type { InstanceLogEntry, InstanceMonitorStats } from "@/helpers/vrchat/vrchat-types";
 
@@ -198,9 +197,6 @@ export function InstanceMonitorDashboard({ className }: InstanceMonitorDashboard
         onStartMonitoring={handleStartMonitoring}
         onStopMonitoring={handleStopMonitoring}
       />
-
-      {/* Settings (collapsible) */}
-      <InstanceSettings className="rounded-lg border" />
 
       {/* Logs */}
       <InstanceLogs logs={logs} className="flex-1" />

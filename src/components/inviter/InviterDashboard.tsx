@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { LoginForm } from "./LoginForm";
 import { TwoFactorDialog } from "./TwoFactorDialog";
@@ -30,7 +29,6 @@ interface InviterDashboardProps {
 
 export function InviterDashboard({ className }: InviterDashboardProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -345,7 +343,6 @@ export function InviterDashboard({ className }: InviterDashboardProps) {
         onStartMonitoring={handleStartMonitoring}
         onStopMonitoring={handleStopMonitoring}
         onLaunchVRChat={handleLaunchVRChat}
-        onOpenSettings={() => navigate({ to: "/settings" })}
       />
 
       {/* Logs */}

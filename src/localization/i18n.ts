@@ -14,6 +14,11 @@ i18n.use(initReactI18next).init({
         // Settings Modal
         settingsTitle: "Ustawienia aplikacji",
         settingsDescription: "Dostosuj język, motyw i inne preferencje",
+        settingsLoadFailed: "Nie udało się załadować ustawień",
+        tabGeneral: "Ogólne",
+        tabApplication: "Aplikacja",
+        tabInviter: "Zapraszanie",
+        tabInstance: "Monitor",
         languageSection: "Język",
         themeSection: "Motyw",
         themeLight: "Jasny",
@@ -335,6 +340,11 @@ i18n.use(initReactI18next).init({
         // Settings Modal
         settingsTitle: "Application Settings",
         settingsDescription: "Customize language, theme and other preferences",
+        settingsLoadFailed: "Failed to load settings",
+        tabGeneral: "General",
+        tabApplication: "Application",
+        tabInviter: "Inviter",
+        tabInstance: "Monitor",
         languageSection: "Language",
         themeSection: "Theme",
         themeLight: "Light",
