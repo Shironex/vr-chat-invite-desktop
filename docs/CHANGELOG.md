@@ -7,6 +7,13 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.3] - 2025-12-05
+
+### Zmienione
+- Nazwa użytkownika który wysyła zaproszenia do Webhook Discord wyświetlana jako **pogrubione** pole zamiast stopki
+
+---
+
 ## [1.2.2] - 2025-12-05
 
 ### Zmienione
