@@ -188,6 +188,8 @@ export function registerVRChatListeners(window: BrowserWindow) {
       LogBufferService.add(monitorStartLog);
       sendToRenderer(VRCHAT_CHANNELS.LOG_ENTRY, monitorStartLog);
       discordWebhook.sendMonitorStarted();
+      // Start periodic stats reporting
+      discordWebhook.startStatsReporting();
       // Update tray state and show notification
       TrayService.setMonitoringState(true);
       TrayNotificationService.showMonitoringStarted();
@@ -201,6 +203,9 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
     // End the current session for statistics tracking
     SessionStatsService.endSession();
+
+    // Stop periodic stats reporting
+    discordWebhook.stopStatsReporting();
 
     await LogMonitorService.stop();
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());
@@ -549,6 +554,17 @@ export function registerVRChatListeners(window: BrowserWindow) {
   // Initialize discord webhook with saved settings
   discordWebhook.updateSettings(SettingsService.getWebhookSettings());
 
+  // Set up stats callback for periodic stats reporting
+  discordWebhook.setStatsCallback(() => {
+    const stats = InviteQueueService.getStats();
+    return {
+      sent: stats.successful,
+      skipped: stats.skipped,
+      errors: stats.errors,
+      queueSize: stats.queueSize,
+    };
+  });
+
   // Set operator from existing session if logged in
   const authState = VRChatAuthService.getAuthState();
   if (authState.isAuthenticated && authState.displayName) {
@@ -591,6 +607,7 @@ export function registerVRChatListeners(window: BrowserWindow) {
       TrayService.setMonitoringState(true);
       TrayNotificationService.showMonitoringStarted();
       discordWebhook.sendMonitorStarted();
+      discordWebhook.startStatsReporting();
     }
   };
 
@@ -599,6 +616,9 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
     // End the current session for statistics tracking
     SessionStatsService.endSession();
+
+    // Stop periodic stats reporting
+    discordWebhook.stopStatsReporting();
 
     await LogMonitorService.stop();
     sendToRenderer(VRCHAT_CHANNELS.MONITOR_STATUS_CHANGED, LogMonitorService.getStatus());

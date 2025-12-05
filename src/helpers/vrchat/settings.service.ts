@@ -26,6 +26,8 @@ export const DEFAULT_WEBHOOK_SETTINGS: WebhookSettings = {
   successUrl: "",
   warningUrl: "",
   errorUrl: "",
+  statsUrl: "",
+  statsIntervalMinutes: 5,
 };
 
 /**
@@ -224,6 +226,8 @@ class SettingsServiceClass {
       successUrl: saved?.successUrl ?? DEFAULT_WEBHOOK_SETTINGS.successUrl,
       warningUrl: saved?.warningUrl ?? DEFAULT_WEBHOOK_SETTINGS.warningUrl,
       errorUrl: saved?.errorUrl ?? DEFAULT_WEBHOOK_SETTINGS.errorUrl,
+      statsUrl: saved?.statsUrl ?? DEFAULT_WEBHOOK_SETTINGS.statsUrl,
+      statsIntervalMinutes: saved?.statsIntervalMinutes ?? DEFAULT_WEBHOOK_SETTINGS.statsIntervalMinutes,
     };
 
     return settings;
@@ -255,6 +259,13 @@ class SettingsServiceClass {
       debugLog.warn("Invalid error webhook URL, clearing");
       updated.errorUrl = "";
     }
+    if (!isValidUrl(updated.statsUrl)) {
+      debugLog.warn("Invalid stats webhook URL, clearing");
+      updated.statsUrl = "";
+    }
+
+    // Validate stats interval (1-60 minutes)
+    updated.statsIntervalMinutes = Math.max(1, Math.min(60, updated.statsIntervalMinutes));
 
     store.set(WEBHOOK_SETTINGS_KEY, updated);
     debugLog.info(`Webhook settings updated: enabled=${updated.enabled}`);

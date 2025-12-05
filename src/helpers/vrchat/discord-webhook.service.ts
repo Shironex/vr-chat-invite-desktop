@@ -27,6 +27,14 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStartedDesc: "Started monitoring VRChat logs for group **{{groupName}}**",
     userId: "User ID",
     sentBy: "Sent by",
+    sessionStats: "Session Statistics",
+    sessionStatsDesc: "Periodic update for group **{{groupName}}**",
+    statsSent: "Invites Sent",
+    statsSkipped: "Skipped",
+    statsErrors: "Errors",
+    statsQueue: "In Queue",
+    statsDuration: "Duration",
+    statsMinutes: "min",
   },
   pl: {
     inviteSuccess: "Zaproszenie wysłane",
@@ -44,6 +52,14 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStartedDesc: "Rozpoczęto monitorowanie logów VRChat dla grupy **{{groupName}}**",
     userId: "User ID",
     sentBy: "Wysłane przez",
+    sessionStats: "Statystyki sesji",
+    sessionStatsDesc: "Okresowa aktualizacja dla grupy **{{groupName}}**",
+    statsSent: "Wysłane zaproszenia",
+    statsSkipped: "Pominięte",
+    statsErrors: "Błędy",
+    statsQueue: "W kolejce",
+    statsDuration: "Czas trwania",
+    statsMinutes: "min",
   },
 } as const;
 
@@ -68,7 +84,7 @@ interface DiscordWebhookPayload {
   embeds: DiscordEmbed[];
 }
 
-type WebhookType = "success" | "warning" | "error";
+type WebhookType = "success" | "warning" | "error" | "stats";
 
 interface QueuedNotification {
   type: WebhookType;
@@ -97,7 +113,16 @@ class DiscordWebhookService {
     successUrl: "",
     warningUrl: "",
     errorUrl: "",
+    statsUrl: "",
+    statsIntervalMinutes: 5,
   };
+
+  // Periodic stats timer
+  private statsTimer: NodeJS.Timeout | null = null;
+  private sessionStartTime: number | null = null;
+
+  // Current stats callback (set by invite queue)
+  private getStatsCallback: (() => { sent: number; skipped: number; errors: number; queueSize: number }) | null = null;
 
   /**
    * Get translation strings based on current language setting
@@ -166,6 +191,8 @@ class DiscordWebhookService {
         return this.settings.warningUrl || null;
       case "error":
         return this.settings.errorUrl || null;
+      case "stats":
+        return this.settings.statsUrl || null;
       default:
         return null;
     }
@@ -371,6 +398,7 @@ class DiscordWebhookService {
         success: [],
         warning: [],
         error: [],
+        stats: [],
       };
 
       // Take up to MAX_BATCH_SIZE per type
@@ -388,7 +416,7 @@ class DiscordWebhookService {
       // Send batches
       const sendPromises: Promise<void>[] = [];
 
-      for (const type of ["success", "warning", "error"] as WebhookType[]) {
+      for (const type of ["success", "warning", "error", "stats"] as WebhookType[]) {
         if (grouped[type].length > 0) {
           sendPromises.push(this.sendBatch(type, grouped[type]));
         }
@@ -455,6 +483,119 @@ class DiscordWebhookService {
     if (this.queue.length > 0) {
       await this.processBatch();
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Periodic Session Statistics
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Set callback to get current stats from invite queue
+   */
+  setStatsCallback(callback: () => { sent: number; skipped: number; errors: number; queueSize: number }): void {
+    this.getStatsCallback = callback;
+  }
+
+  /**
+   * Start periodic stats reporting (called when monitoring starts)
+   */
+  startStatsReporting(): void {
+    // Don't start if stats webhook not configured
+    if (!this.isConfigured("stats")) {
+      debugLog.debug("Stats webhook not configured, skipping periodic reporting");
+      return;
+    }
+
+    // Clear any existing timer
+    this.stopStatsReporting();
+
+    this.sessionStartTime = Date.now();
+    const intervalMs = this.settings.statsIntervalMinutes * 60 * 1000;
+
+    debugLog.info(`Starting periodic stats reporting every ${this.settings.statsIntervalMinutes} minutes`);
+
+    this.statsTimer = setInterval(() => {
+      this.sendSessionStats();
+    }, intervalMs);
+
+    // Send initial stats after a short delay
+    setTimeout(() => {
+      this.sendSessionStats();
+    }, 5000);
+  }
+
+  /**
+   * Stop periodic stats reporting (called when monitoring stops)
+   */
+  stopStatsReporting(): void {
+    if (this.statsTimer) {
+      clearInterval(this.statsTimer);
+      this.statsTimer = null;
+    }
+    this.sessionStartTime = null;
+    debugLog.info("Stopped periodic stats reporting");
+  }
+
+  /**
+   * Send current session statistics to webhook
+   */
+  sendSessionStats(): void {
+    if (!this.isConfigured("stats")) {
+      debugLog.debug("Discord stats webhook not configured, skipping");
+      return;
+    }
+
+    if (!this.getStatsCallback) {
+      debugLog.warn("Stats callback not set, skipping session stats");
+      return;
+    }
+
+    const stats = this.getStatsCallback();
+    const t = this.getTranslations();
+    const operatorField = this.getOperatorField();
+
+    // Calculate duration
+    const durationMs = this.sessionStartTime ? Date.now() - this.sessionStartTime : 0;
+    const durationMinutes = Math.round(durationMs / 60000);
+
+    const embed: DiscordEmbed = {
+      title: `📊 ${t.sessionStats}`,
+      description: this.interpolate(t.sessionStatsDesc, {
+        groupName: VRCHAT_GROUP.GROUP_NAME,
+      }),
+      color: COLORS.success,
+      fields: [
+        {
+          name: t.statsSent,
+          value: `**${stats.sent}**`,
+          inline: true,
+        },
+        {
+          name: t.statsSkipped,
+          value: `**${stats.skipped}**`,
+          inline: true,
+        },
+        {
+          name: t.statsErrors,
+          value: `**${stats.errors}**`,
+          inline: true,
+        },
+        {
+          name: t.statsQueue,
+          value: `**${stats.queueSize}**`,
+          inline: true,
+        },
+        {
+          name: t.statsDuration,
+          value: `**${durationMinutes}** ${t.statsMinutes}`,
+          inline: true,
+        },
+        ...(operatorField ? [operatorField] : []),
+      ],
+      timestamp: new Date().toISOString(),
+    };
+
+    this.queueNotification("stats", embed);
   }
 }
 

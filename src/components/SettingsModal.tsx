@@ -72,11 +72,14 @@ interface AllSettings {
     queueThreshold: number;
     queuePauseDelay: number;
   };
+  // Discord Webhooks (consolidated)
   inviterWebhook: {
     enabled: boolean;
     successUrl: string;
     warningUrl: string;
     errorUrl: string;
+    statsUrl: string;
+    statsIntervalMinutes: number;
   };
   // Instance Monitor
   instanceWebhook: {
@@ -168,6 +171,8 @@ export default function SettingsModal() {
       successUrl: "",
       warningUrl: "",
       errorUrl: "",
+      statsUrl: "",
+      statsIntervalMinutes: 5,
     },
     instanceWebhook: {
       enabled: false,
@@ -356,9 +361,9 @@ export default function SettingsModal() {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">{t("tabInviter")}</span>
                 </TabsTrigger>
-                <TabsTrigger value="instance" className="gap-1.5">
-                  <Gauge className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("tabInstance")}</span>
+                <TabsTrigger value="discord" className="gap-1.5">
+                  <Webhook className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("tabDiscord")}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -630,8 +635,12 @@ export default function SettingsModal() {
                     </div>
                   </div>
 
-                  <Separator />
+                </TabsContent>
 
+                {/* ─────────────────────────────────────────────────────────────────
+                    Discord Tab (All Webhooks)
+                ───────────────────────────────────────────────────────────────── */}
+                <TabsContent value="discord" className="space-y-6 pr-4">
                   {/* Inviter Webhook Settings */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -710,24 +719,55 @@ export default function SettingsModal() {
                           />
                           <p className="text-muted-foreground text-xs">{t("webhookErrorUrlHint")}</p>
                         </div>
+
+                        {/* Stats Webhook URL */}
+                        <div className="space-y-2">
+                          <Label className="text-sm">{t("webhookStatsUrl")}</Label>
+                          <Input
+                            type="url"
+                            placeholder="https://discord.com/api/webhooks/..."
+                            value={settings.inviterWebhook.statsUrl}
+                            onChange={(e) =>
+                              updateSettings("inviterWebhook", {
+                                ...settings.inviterWebhook,
+                                statsUrl: e.target.value,
+                              })
+                            }
+                          />
+                          <p className="text-muted-foreground text-xs">{t("webhookStatsUrlHint")}</p>
+                        </div>
+
+                        {/* Stats Interval */}
+                        <SliderField
+                          label={t("webhookStatsInterval")}
+                          value={settings.inviterWebhook.statsIntervalMinutes}
+                          onChange={(v) =>
+                            updateSettings("inviterWebhook", {
+                              ...settings.inviterWebhook,
+                              statsIntervalMinutes: v,
+                            })
+                          }
+                          min={1}
+                          max={60}
+                          unit={t("webhookStatsIntervalUnit")}
+                          hint={t("webhookStatsIntervalHint")}
+                          disabled={isSaving}
+                        />
                       </div>
                     )}
                   </div>
-                </TabsContent>
 
-                {/* ─────────────────────────────────────────────────────────────────
-                    Instance Monitor Tab
-                ───────────────────────────────────────────────────────────────── */}
-                <TabsContent value="instance" className="space-y-6 pr-4">
+                  <Separator />
+
                   {/* Instance Webhook Settings */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Webhook className="h-5 w-5 text-muted-foreground" />
+                      <Gauge className="h-5 w-5 text-muted-foreground" />
                       <h3 className="text-sm font-semibold">{t("instanceWebhookTitle")}</h3>
                     </div>
                     <p className="text-muted-foreground text-sm">{t("instanceWebhookDescription")}</p>
 
-                    {/* Enable Webhooks Toggle */}
+                    {/* Enable Instance Webhooks Toggle */}
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label className="text-sm">{t("instanceWebhookEnable")}</Label>
@@ -744,7 +784,7 @@ export default function SettingsModal() {
                       />
                     </div>
 
-                    {/* Webhook URL */}
+                    {/* Instance Webhook URL */}
                     {settings.instanceWebhook.enabled && (
                       <div className="space-y-2 rounded-lg border p-4">
                         <Label className="text-sm">{t("instanceWebhookUrl")}</Label>

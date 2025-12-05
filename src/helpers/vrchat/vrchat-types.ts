@@ -282,6 +282,8 @@ export interface WebhookSettings {
   successUrl: string; // Default: "" (empty)
   warningUrl: string; // Default: "" (empty)
   errorUrl: string; // Default: "" (empty)
+  statsUrl: string; // Default: "" (empty) - for periodic session stats
+  statsIntervalMinutes: number; // Default: 5 - interval for stats updates
 }
 
 // ─────────────────────────────────────────────────────────────────

@@ -7,6 +7,23 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.4] - 2025-12-05
+
+### Dodane
+- **Okresowe statystyki sesji na Discord** - nowy webhook wysyłający cykliczne podsumowanie sesji
+  - Liczba wysłanych zaproszeń, pominiętych, błędów
+  - Rozmiar kolejki i czas trwania sesji
+  - Konfigurowalny interwał (1-60 minut, domyślnie 5 min)
+  - Automatyczne uruchamianie/zatrzymywanie wraz z monitorowaniem
+
+### Zmienione
+- **Nowa zakładka Discord w ustawieniach** - wszystkie webhooki w jednym miejscu
+  - Webhooki zapraszania (sukces/ostrzeżenie/błąd/statystyki)
+  - Webhook monitora instancji
+  - Usunięto zakładkę "Monitor" (ustawienia przeniesione do Discord)
+
+---
+
 ## [1.2.3] - 2025-12-05
 
 ### Zmienione

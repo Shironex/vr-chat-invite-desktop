@@ -244,6 +244,8 @@ interface WebhookSettings {
   successUrl: string;
   warningUrl: string;
   errorUrl: string;
+  statsUrl: string;
+  statsIntervalMinutes: number;
 }
 
 // ─────────────────────────────────────────────────────────────────
