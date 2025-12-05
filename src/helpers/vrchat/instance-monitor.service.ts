@@ -44,6 +44,11 @@ class InstanceMonitorServiceClass {
   private localUserDisplayName: string | null = null;
   private isInWorldTransition = false;
 
+  // Buffered leave events - we delay sending them to check for world transition
+  private pendingLeaveEvents: InstanceEvent[] = [];
+  private leaveEventTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly LEAVE_EVENT_DELAY = 2000; // 2 seconds to wait before sending leave events
+
   // Statistics
   private stats: InstanceMonitorStats = {
     playersJoined: 0,
@@ -132,13 +137,16 @@ class InstanceMonitorServiceClass {
     const trimmedLine = line.trim();
     if (!trimmedLine) return;
 
-    // Check for world entry - this clears the transition state
+    // Check for world entry - this cancels any pending leave events (they were false positives)
     const worldMatch = PATTERNS.WORLD_ENTER.exec(trimmedLine);
     if (worldMatch) {
       const worldName = worldMatch[1].trim();
       this.currentWorld = worldName;
       this.stats.worldChanges++;
       this.lastActivity = Date.now();
+
+      // Cancel pending leave events - we just changed worlds, so they were false positives
+      this.cancelPendingLeaveEvents();
 
       // Clear transition state - we've entered a new world
       if (this.isInWorldTransition) {
@@ -209,30 +217,30 @@ class InstanceMonitorServiceClass {
       if (this.localUserDisplayName && displayName === this.localUserDisplayName) {
         debugLog.info(`[Instance] Local user leaving, starting world transition`);
         this.isInWorldTransition = true;
+        // Cancel any pending leave events from before we detected the transition
+        this.cancelPendingLeaveEvents();
         // Don't count our own leave or send event
         return;
       }
 
-      // If we're in world transition, suppress leave events (they're false positives)
+      // If we're already in world transition, suppress leave events
       if (this.isInWorldTransition) {
         debugLog.debug(`[Instance] Suppressing leave event during world transition: ${displayName}`);
         return;
       }
 
-      this.stats.playersLeft++;
       debugLog.info(`[Instance] Player left: ${displayName} (${userId})`);
 
-      if (this.onInstanceEventCallback) {
-        const event: InstanceEvent = {
-          type: "player_leave",
-          timestamp: Date.now(),
-          worldName: this.currentWorld || undefined,
-          worldId: this.currentWorldId || undefined,
-          userId,
-          displayName,
-        };
-        this.onInstanceEventCallback(event);
-      }
+      // Queue the leave event - we'll send it after a delay unless we detect a world transition
+      const event: InstanceEvent = {
+        type: "player_leave",
+        timestamp: Date.now(),
+        worldName: this.currentWorld || undefined,
+        worldId: this.currentWorldId || undefined,
+        userId,
+        displayName,
+      };
+      this.queueLeaveEvent(event);
       return;
     }
   }
@@ -539,6 +547,59 @@ class InstanceMonitorServiceClass {
    */
   getLocalUserDisplayName(): string | null {
     return this.localUserDisplayName;
+  }
+
+  /**
+   * Flush pending leave events (send them to callback)
+   * Called when the delay timer expires and no world transition happened
+   */
+  private flushPendingLeaveEvents(): void {
+    if (this.pendingLeaveEvents.length === 0) return;
+
+    debugLog.debug(`[Instance] Flushing ${this.pendingLeaveEvents.length} pending leave events`);
+
+    for (const event of this.pendingLeaveEvents) {
+      this.stats.playersLeft++;
+      if (this.onInstanceEventCallback) {
+        this.onInstanceEventCallback(event);
+      }
+    }
+
+    this.pendingLeaveEvents = [];
+    this.leaveEventTimer = null;
+  }
+
+  /**
+   * Cancel pending leave events (discard them)
+   * Called when we detect a world transition
+   */
+  private cancelPendingLeaveEvents(): void {
+    if (this.leaveEventTimer) {
+      clearTimeout(this.leaveEventTimer);
+      this.leaveEventTimer = null;
+    }
+
+    if (this.pendingLeaveEvents.length > 0) {
+      debugLog.info(`[Instance] Discarding ${this.pendingLeaveEvents.length} leave events due to world transition`);
+      this.pendingLeaveEvents = [];
+    }
+  }
+
+  /**
+   * Queue a leave event for delayed processing
+   */
+  private queueLeaveEvent(event: InstanceEvent): void {
+    this.pendingLeaveEvents.push(event);
+    debugLog.debug(`[Instance] Queued leave event for ${event.displayName}, pending: ${this.pendingLeaveEvents.length}`);
+
+    // Start or reset the timer
+    if (this.leaveEventTimer) {
+      clearTimeout(this.leaveEventTimer);
+    }
+
+    this.leaveEventTimer = setTimeout(() => {
+      this.flushPendingLeaveEvents();
+    }, this.LEAVE_EVENT_DELAY);
   }
 }
 
