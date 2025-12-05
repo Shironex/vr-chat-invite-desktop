@@ -7,6 +7,17 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.1] - 2025-12-05
+
+### Zmienione
+- Ustawienia zasobnika systemowego domyślnie wyłączone przy pierwszej instalacji
+- Usunięto nieużywane komponenty ustawień (czyszczenie kodu)
+
+### Naprawione
+- Naprawiono przewijanie w modalu ustawień na mniejszych oknach
+
+---
+
 ## [1.2.0] - 2025-12-05
 
 ### Dodane
