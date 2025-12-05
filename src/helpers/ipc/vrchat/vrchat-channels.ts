@@ -83,6 +83,32 @@ export const VRCHAT_CHANNELS = {
   // Language Settings
   LANGUAGE_GET: "vrchat:language:get",
   LANGUAGE_SET: "vrchat:language:set",
+
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Monitor
+  // ─────────────────────────────────────────────────────────────────
+
+  // Instance Monitor Control
+  INSTANCE_MONITOR_START: "vrchat:instance:start",
+  INSTANCE_MONITOR_STOP: "vrchat:instance:stop",
+  INSTANCE_MONITOR_GET_STATUS: "vrchat:instance:getStatus",
+  INSTANCE_MONITOR_GET_STATS: "vrchat:instance:getStats",
+  INSTANCE_MONITOR_RESET_STATS: "vrchat:instance:resetStats",
+
+  // Instance Monitor Events (main -> renderer)
+  INSTANCE_MONITOR_STATUS_CHANGED: "vrchat:instance:statusChanged",
+  INSTANCE_EVENT: "vrchat:instance:event",
+  INSTANCE_LOG_ENTRY: "vrchat:instance:logEntry",
+  INSTANCE_STATS_UPDATED: "vrchat:instance:statsUpdated",
+
+  // Instance Log Buffer
+  INSTANCE_LOG_GET_BUFFER: "vrchat:instance:getBuffer",
+  INSTANCE_LOG_CLEAR: "vrchat:instance:clearBuffer",
+
+  // Instance Webhook Settings
+  INSTANCE_WEBHOOK_GET: "vrchat:instance:webhookGet",
+  INSTANCE_WEBHOOK_SET: "vrchat:instance:webhookSet",
+  INSTANCE_WEBHOOK_RESET: "vrchat:instance:webhookReset",
 } as const;
 
 export type VRChatChannel =

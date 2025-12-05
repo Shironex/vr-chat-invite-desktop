@@ -9,12 +9,13 @@ import * as path from "path";
 import { debugLog } from "../debug-mode";
 import { DEFAULT_RATE_LIMITS } from "../../config/vrchat.config";
 import { TRAY_CONFIG } from "../../config/app.config";
-import type { RateLimitSettings, TraySettings, WebhookSettings } from "./vrchat-types";
+import type { RateLimitSettings, TraySettings, WebhookSettings, InstanceWebhookSettings } from "./vrchat-types";
 
 const SETTINGS_KEY = "rate-limit-settings";
 const VRCHAT_PATH_KEY = "vrchat-path";
 const TRAY_SETTINGS_KEY = "tray-settings";
 const WEBHOOK_SETTINGS_KEY = "webhook-settings";
+const INSTANCE_WEBHOOK_SETTINGS_KEY = "instance-webhook-settings";
 const LANGUAGE_KEY = "app-language";
 
 /**
@@ -25,6 +26,14 @@ export const DEFAULT_WEBHOOK_SETTINGS: WebhookSettings = {
   successUrl: "",
   warningUrl: "",
   errorUrl: "",
+};
+
+/**
+ * Default instance webhook settings - disabled by default
+ */
+export const DEFAULT_INSTANCE_WEBHOOK_SETTINGS: InstanceWebhookSettings = {
+  enabled: false,
+  webhookUrl: "",
 };
 
 // Settings store
@@ -278,6 +287,54 @@ class SettingsServiceClass {
   setLanguage(lang: "en" | "pl"): void {
     store.set(LANGUAGE_KEY, lang);
     debugLog.info(`Language set to: ${lang}`);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Webhook Settings
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Get current instance webhook settings
+   */
+  getInstanceWebhookSettings(): InstanceWebhookSettings {
+    const saved = store.get(INSTANCE_WEBHOOK_SETTINGS_KEY) as Partial<InstanceWebhookSettings> | undefined;
+
+    // Merge with defaults to ensure all fields exist
+    const settings: InstanceWebhookSettings = {
+      enabled: saved?.enabled ?? DEFAULT_INSTANCE_WEBHOOK_SETTINGS.enabled,
+      webhookUrl: saved?.webhookUrl ?? DEFAULT_INSTANCE_WEBHOOK_SETTINGS.webhookUrl,
+    };
+
+    return settings;
+  }
+
+  /**
+   * Update instance webhook settings
+   */
+  setInstanceWebhookSettings(partial: Partial<InstanceWebhookSettings>): void {
+    const current = this.getInstanceWebhookSettings();
+    const updated: InstanceWebhookSettings = {
+      ...current,
+      ...partial,
+    };
+
+    // Validate webhook URL (basic format check)
+    if (updated.webhookUrl && !updated.webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
+      debugLog.warn("Invalid instance webhook URL, clearing");
+      updated.webhookUrl = "";
+    }
+
+    store.set(INSTANCE_WEBHOOK_SETTINGS_KEY, updated);
+    debugLog.info(`Instance webhook settings updated: enabled=${updated.enabled}`);
+  }
+
+  /**
+   * Reset instance webhook settings to defaults (disabled)
+   */
+  resetInstanceWebhookSettings(): InstanceWebhookSettings {
+    store.delete(INSTANCE_WEBHOOK_SETTINGS_KEY);
+    debugLog.info("Instance webhook settings reset to defaults");
+    return { ...DEFAULT_INSTANCE_WEBHOOK_SETTINGS };
   }
 }
 

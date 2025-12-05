@@ -2,7 +2,7 @@ import { exposeThemeContext } from "./theme/theme-context";
 import { exposeWindowContext } from "./window/window-context";
 import { exposeDebugContext } from "./debug/debug-context";
 import { exposeUpdaterContext } from "./updater/updater-context";
-import { exposeVRChatContext } from "./vrchat/vrchat-context";
+import { exposeVRChatContext, exposeInstanceMonitorContext } from "./vrchat/vrchat-context";
 import { exposeTrayContext } from "./tray/tray-context";
 
 export default function exposeContexts() {
@@ -11,5 +11,6 @@ export default function exposeContexts() {
   exposeDebugContext();
   exposeUpdaterContext();
   exposeVRChatContext();
+  exposeInstanceMonitorContext();
   exposeTrayContext();
 }

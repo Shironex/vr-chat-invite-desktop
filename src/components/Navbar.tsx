@@ -6,7 +6,7 @@ import SettingsModal from "./SettingsModal";
 import { ChangelogHistoryDialog } from "./ChangelogHistoryDialog";
 import { NetworkStatusIcon } from "./OfflineIndicator";
 import { UserAvatarDropdown } from "./inviter/UserAvatarDropdown";
-import { Home, History, Circle, BarChart3 } from "lucide-react";
+import { Home, History, Circle, BarChart3, Users } from "lucide-react";
 import { debugLog } from "@/helpers/debug-logger";
 import { cn } from "@/utils/tailwind";
 
@@ -112,6 +112,17 @@ export default function Navbar() {
             >
               <History className="h-4 w-4 shrink-0" />
               <span className="hidden md:inline">{t("navHistory")}</span>
+            </Button>
+          </Link>
+          <Link to="/instance-monitor">
+            <Button
+              variant={isActive("/instance-monitor") ? "default" : "ghost"}
+              size="sm"
+              className="gap-2"
+              title={t("navInstanceMonitor")}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t("navInstanceMonitor")}</span>
             </Button>
           </Link>
         </div>

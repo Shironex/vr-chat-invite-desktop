@@ -32,7 +32,13 @@ import type {
   InviteHistoryExportResult,
   SessionStatsQueryOptions,
   WebhookSettings,
+  InstanceEvent,
+  InstanceLogEntry,
+  InstanceWebhookSettings,
 } from "../../vrchat/vrchat-types";
+import { InstanceMonitorService } from "../../vrchat/instance-monitor.service";
+import { InstanceWebhookService } from "../../vrchat/instance-webhook.service";
+import { InstanceLogBufferService } from "../../vrchat/instance-log-buffer.service";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -599,6 +605,170 @@ export function registerVRChatListeners(window: BrowserWindow) {
     TrayService.setMonitoringState(false);
     TrayNotificationService.showMonitoringStopped();
   };
+
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Monitor Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Helper to create log entry from instance event
+   */
+  function createInstanceLogEntry(event: InstanceEvent): InstanceLogEntry {
+    switch (event.type) {
+      case "world_enter":
+        return {
+          type: "world",
+          message: `Entered world: ${event.worldName || "Unknown"}`,
+          timestamp: event.timestamp,
+          worldName: event.worldName,
+          i18nKey: "instanceWorldEntered",
+          i18nParams: { world: event.worldName || "Unknown" },
+        };
+      case "player_join":
+        return {
+          type: "join",
+          message: `${event.displayName} joined`,
+          timestamp: event.timestamp,
+          userId: event.userId,
+          displayName: event.displayName,
+          worldName: event.worldName,
+          i18nKey: "instancePlayerJoined",
+          i18nParams: { name: event.displayName || "Unknown" },
+        };
+      case "player_leave":
+        return {
+          type: "leave",
+          message: `${event.displayName} left`,
+          timestamp: event.timestamp,
+          userId: event.userId,
+          displayName: event.displayName,
+          worldName: event.worldName,
+          i18nKey: "instancePlayerLeft",
+          i18nParams: { name: event.displayName || "Unknown" },
+        };
+      default:
+        return {
+          type: "system",
+          message: "Unknown event",
+          timestamp: event.timestamp,
+        };
+    }
+  }
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_MONITOR_START, async (): Promise<boolean> => {
+    debugLog.ipc("INSTANCE_MONITOR_START called");
+
+    // Callback for when instance event occurs
+    const onInstanceEvent = (event: InstanceEvent) => {
+      debugLog.info(`[Instance] Event: ${event.type} - ${event.displayName || event.worldName}`);
+
+      // Send event to renderer
+      sendToRenderer(VRCHAT_CHANNELS.INSTANCE_EVENT, event);
+
+      // Create log entry
+      const logEntry = createInstanceLogEntry(event);
+      InstanceLogBufferService.add(logEntry);
+      sendToRenderer(VRCHAT_CHANNELS.INSTANCE_LOG_ENTRY, logEntry);
+
+      // Send Discord webhook
+      InstanceWebhookService.sendEvent(event);
+
+      // Update stats
+      sendToRenderer(VRCHAT_CHANNELS.INSTANCE_STATS_UPDATED, InstanceMonitorService.getStats());
+    };
+
+    const started = await InstanceMonitorService.start(onInstanceEvent);
+    sendToRenderer(VRCHAT_CHANNELS.INSTANCE_MONITOR_STATUS_CHANGED, InstanceMonitorService.getStatus());
+
+    if (started) {
+      const startLog: InstanceLogEntry = {
+        type: "system",
+        message: "Instance monitor started",
+        timestamp: Date.now(),
+        i18nKey: "instanceMonitorStarted",
+      };
+      InstanceLogBufferService.add(startLog);
+      sendToRenderer(VRCHAT_CHANNELS.INSTANCE_LOG_ENTRY, startLog);
+    }
+
+    return started;
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_MONITOR_STOP, async (): Promise<void> => {
+    debugLog.ipc("INSTANCE_MONITOR_STOP called");
+
+    await InstanceMonitorService.stop();
+    sendToRenderer(VRCHAT_CHANNELS.INSTANCE_MONITOR_STATUS_CHANGED, InstanceMonitorService.getStatus());
+
+    const stopLog: InstanceLogEntry = {
+      type: "system",
+      message: "Instance monitor stopped",
+      timestamp: Date.now(),
+      i18nKey: "instanceMonitorStopped",
+    };
+    InstanceLogBufferService.add(stopLog);
+    sendToRenderer(VRCHAT_CHANNELS.INSTANCE_LOG_ENTRY, stopLog);
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_MONITOR_GET_STATUS, async () => {
+    debugLog.ipc("INSTANCE_MONITOR_GET_STATUS called");
+    return InstanceMonitorService.getStatus();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_MONITOR_GET_STATS, async () => {
+    debugLog.ipc("INSTANCE_MONITOR_GET_STATS called");
+    return InstanceMonitorService.getStats();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_MONITOR_RESET_STATS, async (): Promise<void> => {
+    debugLog.ipc("INSTANCE_MONITOR_RESET_STATS called");
+    InstanceMonitorService.resetStats();
+    sendToRenderer(VRCHAT_CHANNELS.INSTANCE_STATS_UPDATED, InstanceMonitorService.getStats());
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Log Buffer Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_LOG_GET_BUFFER, async (): Promise<InstanceLogEntry[]> => {
+    debugLog.ipc("INSTANCE_LOG_GET_BUFFER called");
+    return InstanceLogBufferService.getLogs();
+  });
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_LOG_CLEAR, async (): Promise<void> => {
+    debugLog.ipc("INSTANCE_LOG_CLEAR called");
+    InstanceLogBufferService.clear();
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Webhook Settings Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_GET, async (): Promise<InstanceWebhookSettings> => {
+    debugLog.ipc("INSTANCE_WEBHOOK_GET called");
+    return SettingsService.getInstanceWebhookSettings();
+  });
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.INSTANCE_WEBHOOK_SET,
+    async (_event, settings: Partial<InstanceWebhookSettings>): Promise<void> => {
+      debugLog.ipc(`INSTANCE_WEBHOOK_SET called: enabled=${settings.enabled}`);
+      SettingsService.setInstanceWebhookSettings(settings);
+      // Update the instance webhook service with new settings
+      InstanceWebhookService.updateSettings(SettingsService.getInstanceWebhookSettings());
+    }
+  );
+
+  ipcMain.handle(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_RESET, async (): Promise<InstanceWebhookSettings> => {
+    debugLog.ipc("INSTANCE_WEBHOOK_RESET called");
+    const defaults = SettingsService.resetInstanceWebhookSettings();
+    // Update the instance webhook service with reset settings
+    InstanceWebhookService.updateSettings(defaults);
+    return defaults;
+  });
+
+  // Initialize instance webhook service with saved settings
+  InstanceWebhookService.updateSettings(SettingsService.getInstanceWebhookSettings());
 
   debugLog.success("VRChat IPC listeners registered");
 }

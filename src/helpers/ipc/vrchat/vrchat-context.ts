@@ -25,6 +25,12 @@ import type {
   SessionStatsQueryOptions,
   SessionStatsResponse,
   WebhookSettings,
+  // Instance Monitor Types
+  InstanceEvent,
+  InstanceMonitorStatus,
+  InstanceMonitorStats,
+  InstanceWebhookSettings,
+  InstanceLogEntry,
 } from "../../vrchat/vrchat-types";
 
 export function exposeVRChatContext() {
@@ -445,6 +451,148 @@ export function exposeVRChatContext() {
       ipcRenderer.on(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, handler);
       return () => {
         ipcRenderer.removeListener(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, handler);
+      };
+    },
+  });
+}
+
+/**
+ * Expose Instance Monitor API to renderer
+ * Separate from VRChat API - does NOT require authentication
+ */
+export function exposeInstanceMonitorContext() {
+  contextBridge.exposeInMainWorld("instanceMonitorAPI", {
+    // ─────────────────────────────────────────────────────────────────
+    // Monitor Control
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Start instance monitoring
+     */
+    startMonitor: (): Promise<boolean> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_MONITOR_START),
+
+    /**
+     * Stop instance monitoring
+     */
+    stopMonitor: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_MONITOR_STOP),
+
+    /**
+     * Get current monitor status
+     */
+    getMonitorStatus: (): Promise<InstanceMonitorStatus> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_MONITOR_GET_STATUS),
+
+    /**
+     * Get current statistics
+     */
+    getStats: (): Promise<InstanceMonitorStats> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_MONITOR_GET_STATS),
+
+    /**
+     * Reset statistics
+     */
+    resetStats: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_MONITOR_RESET_STATS),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Log Buffer
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get buffered logs
+     */
+    getLogBuffer: (): Promise<InstanceLogEntry[]> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_LOG_GET_BUFFER),
+
+    /**
+     * Clear the log buffer
+     */
+    clearLogBuffer: (): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_LOG_CLEAR),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Webhook Settings
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Get webhook settings
+     */
+    getWebhookSettings: (): Promise<InstanceWebhookSettings> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_GET),
+
+    /**
+     * Update webhook settings
+     */
+    setWebhookSettings: (settings: Partial<InstanceWebhookSettings>): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_SET, settings),
+
+    /**
+     * Reset webhook settings to defaults
+     */
+    resetWebhookSettings: (): Promise<InstanceWebhookSettings> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_RESET),
+
+    // ─────────────────────────────────────────────────────────────────
+    // VRChat Process (reuse from main process)
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Check if VRChat is running
+     */
+    checkVRChatProcess: (): Promise<boolean> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.PROCESS_CHECK),
+
+    // ─────────────────────────────────────────────────────────────────
+    // Event Listeners
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Listen for monitor status changes
+     */
+    onMonitorStatusChanged: (callback: (status: InstanceMonitorStatus) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, status: InstanceMonitorStatus) =>
+        callback(status);
+      ipcRenderer.on(VRCHAT_CHANNELS.INSTANCE_MONITOR_STATUS_CHANGED, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.INSTANCE_MONITOR_STATUS_CHANGED, handler);
+      };
+    },
+
+    /**
+     * Listen for instance events (world enter, player join/leave)
+     */
+    onInstanceEvent: (callback: (event: InstanceEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, event: InstanceEvent) =>
+        callback(event);
+      ipcRenderer.on(VRCHAT_CHANNELS.INSTANCE_EVENT, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.INSTANCE_EVENT, handler);
+      };
+    },
+
+    /**
+     * Listen for log entries
+     */
+    onLogEntry: (callback: (entry: InstanceLogEntry) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, entry: InstanceLogEntry) =>
+        callback(entry);
+      ipcRenderer.on(VRCHAT_CHANNELS.INSTANCE_LOG_ENTRY, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.INSTANCE_LOG_ENTRY, handler);
+      };
+    },
+
+    /**
+     * Listen for stats updates
+     */
+    onStatsUpdated: (callback: (stats: InstanceMonitorStats) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, stats: InstanceMonitorStats) =>
+        callback(stats);
+      ipcRenderer.on(VRCHAT_CHANNELS.INSTANCE_STATS_UPDATED, handler);
+      return () => {
+        ipcRenderer.removeListener(VRCHAT_CHANNELS.INSTANCE_STATS_UPDATED, handler);
       };
     },
   });

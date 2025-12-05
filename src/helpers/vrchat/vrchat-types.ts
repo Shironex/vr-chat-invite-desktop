@@ -339,3 +339,75 @@ export interface SessionStatsResponse {
   activeSession?: SessionData;
   peakHours: PeakHourData[];
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Instance Monitor Types
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Instance event types
+ */
+export type InstanceEventType = "world_enter" | "player_join" | "player_leave";
+
+/**
+ * Instance event data (emitted when world/player events occur)
+ */
+export interface InstanceEvent {
+  type: InstanceEventType;
+  timestamp: number;
+  worldName?: string;
+  worldId?: string;
+  instanceId?: string;
+  region?: string;
+  userId?: string;
+  displayName?: string;
+}
+
+/**
+ * Instance monitor status
+ */
+export interface InstanceMonitorStatus {
+  isRunning: boolean;
+  logFilePath?: string;
+  lastActivity?: number;
+  currentWorld?: string;
+  currentWorldId?: string;
+}
+
+/**
+ * Instance monitor statistics
+ */
+export interface InstanceMonitorStats {
+  playersJoined: number;
+  playersLeft: number;
+  worldChanges: number;
+}
+
+/**
+ * Instance webhook settings (user configurable)
+ * Single webhook URL for all instance events
+ */
+export interface InstanceWebhookSettings {
+  enabled: boolean;
+  webhookUrl: string;
+}
+
+/**
+ * Instance log entry types
+ */
+export type InstanceLogType = "world" | "join" | "leave" | "system";
+
+/**
+ * Instance log entry for the UI
+ */
+export interface InstanceLogEntry {
+  type: InstanceLogType;
+  message: string;
+  timestamp: number;
+  userId?: string;
+  displayName?: string;
+  worldName?: string;
+  // Translation support
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
+}

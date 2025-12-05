@@ -292,6 +292,82 @@ interface TrayAPI {
   setSettings: (settings: Partial<TraySettings>) => Promise<TraySettings>;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Instance Monitor Types
+// ─────────────────────────────────────────────────────────────────
+
+type InstanceEventType = "world_enter" | "player_join" | "player_leave";
+
+interface InstanceEvent {
+  type: InstanceEventType;
+  timestamp: number;
+  worldName?: string;
+  worldId?: string;
+  instanceId?: string;
+  region?: string;
+  userId?: string;
+  displayName?: string;
+}
+
+interface InstanceMonitorStatus {
+  isRunning: boolean;
+  logFilePath?: string;
+  lastActivity?: number;
+  currentWorld?: string;
+  currentWorldId?: string;
+}
+
+interface InstanceMonitorStats {
+  playersJoined: number;
+  playersLeft: number;
+  worldChanges: number;
+}
+
+interface InstanceWebhookSettings {
+  enabled: boolean;
+  webhookUrl: string;
+}
+
+type InstanceLogType = "world" | "join" | "leave" | "system";
+
+interface InstanceLogEntry {
+  type: InstanceLogType;
+  message: string;
+  timestamp: number;
+  userId?: string;
+  displayName?: string;
+  worldName?: string;
+  i18nKey?: string;
+  i18nParams?: Record<string, string | number>;
+}
+
+interface InstanceMonitorAPI {
+  // Monitor Control
+  startMonitor: () => Promise<boolean>;
+  stopMonitor: () => Promise<void>;
+  getMonitorStatus: () => Promise<InstanceMonitorStatus>;
+  getStats: () => Promise<InstanceMonitorStats>;
+  resetStats: () => Promise<void>;
+
+  // Log Buffer
+  getLogBuffer: () => Promise<InstanceLogEntry[]>;
+  clearLogBuffer: () => Promise<void>;
+
+  // Settings
+  getWebhookSettings: () => Promise<InstanceWebhookSettings>;
+  setWebhookSettings: (settings: Partial<InstanceWebhookSettings>) => Promise<void>;
+  resetWebhookSettings: () => Promise<InstanceWebhookSettings>;
+
+  // VRChat Process (reuse from vrchatAPI)
+  checkVRChatProcess: () => Promise<boolean>;
+
+  // Event Listeners (return unsubscribe function)
+  onMonitorStatusChanged: (callback: (status: InstanceMonitorStatus) => void) => () => void;
+  onInstanceEvent: (callback: (event: InstanceEvent) => void) => () => void;
+  onLogEntry: (callback: (entry: InstanceLogEntry) => void) => () => void;
+  onStatsUpdated: (callback: (stats: InstanceMonitorStats) => void) => () => void;
+}
+
 interface VRChatAPI {
   // Authentication
   login: (credentials: VRChatLoginCredentials) => Promise<VRChatAuthState>;
@@ -378,4 +454,5 @@ declare interface Window {
   updaterAPI: UpdaterAPI;
   vrchatAPI: VRChatAPI;
   trayAPI: TrayAPI;
+  instanceMonitorAPI: InstanceMonitorAPI;
 }

@@ -109,6 +109,32 @@ export const MONITOR_CONFIG = {
 } as const;
 
 /**
+ * Instance Monitor Configuration
+ * Patterns for detecting world changes and player join/leave events
+ */
+export const INSTANCE_MONITOR_CONFIG = {
+  // How often to check for new log entries (ms)
+  POLL_INTERVAL: 500,
+
+  // Regex patterns for instance monitoring
+  PATTERNS: {
+    // World entry: [Behaviour] Entering Room: World Name
+    // Note: Using (.+?) with lookahead to handle Windows line endings (\r\n)
+    WORLD_ENTER: /\[Behaviour\] Entering Room: (.+?)[\r\n]*$/,
+
+    // Instance join: [Behaviour] Joining wrld_xxx:instanceId~...~region(xx)
+    INSTANCE_JOIN:
+      /\[Behaviour\] Joining (wrld_[a-f0-9-]+):([^~\s]+)(?:~.*region\(([a-z]+)\))?/i,
+
+    // Player join: [Behaviour] OnPlayerJoined DisplayName (usr_xxx)
+    PLAYER_JOIN: /\[Behaviour\] OnPlayerJoined\s+(.+?)\s*\((usr_[a-f0-9-]+)\)/i,
+
+    // Player leave: [Behaviour] OnPlayerLeft DisplayName (usr_xxx)
+    PLAYER_LEAVE: /\[Behaviour\] OnPlayerLeft\s+(.+?)\s*\((usr_[a-f0-9-]+)\)/i,
+  },
+} as const;
+
+/**
  * UI Configuration
  */
 export const UI_CONFIG = {
