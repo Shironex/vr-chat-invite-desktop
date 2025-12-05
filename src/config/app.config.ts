@@ -69,8 +69,8 @@ export const GITHUB_CONFIG = {
  */
 export const TRAY_CONFIG = {
   defaults: {
-    minimizeToTray: true,
-    showDesktopNotifications: true,
+    minimizeToTray: false,
+    showDesktopNotifications: false,
   },
 };
 

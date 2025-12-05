@@ -265,8 +265,8 @@ export interface InviteHistoryExportResult {
  * System tray settings (user configurable)
  */
 export interface TraySettings {
-  minimizeToTray: boolean; // Default: true
-  showDesktopNotifications: boolean; // Default: true
+  minimizeToTray: boolean; // Default: false
+  showDesktopNotifications: boolean; // Default: false
 }
 
 // ─────────────────────────────────────────────────────────────────

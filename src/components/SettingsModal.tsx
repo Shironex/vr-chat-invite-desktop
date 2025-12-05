@@ -153,8 +153,8 @@ export default function SettingsModal() {
     theme: "system",
     vrchatPath: null,
     tray: {
-      minimizeToTray: true,
-      showDesktopNotifications: true,
+      minimizeToTray: false,
+      showDesktopNotifications: false,
     },
     rateLimit: {
       inviteBatchCount: 8,
