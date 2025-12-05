@@ -534,6 +534,12 @@ export function exposeInstanceMonitorContext() {
     resetWebhookSettings: (): Promise<InstanceWebhookSettings> =>
       ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_WEBHOOK_RESET),
 
+    /**
+     * Set the local user's display name (for detecting own world changes)
+     */
+    setLocalUser: (displayName: string | null): Promise<void> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.INSTANCE_SET_LOCAL_USER, displayName),
+
     // ─────────────────────────────────────────────────────────────────
     // VRChat Process (reuse from main process)
     // ─────────────────────────────────────────────────────────────────

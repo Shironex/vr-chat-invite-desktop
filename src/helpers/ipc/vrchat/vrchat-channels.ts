@@ -109,6 +109,9 @@ export const VRCHAT_CHANNELS = {
   INSTANCE_WEBHOOK_GET: "vrchat:instance:webhookGet",
   INSTANCE_WEBHOOK_SET: "vrchat:instance:webhookSet",
   INSTANCE_WEBHOOK_RESET: "vrchat:instance:webhookReset",
+
+  // Instance Local User (for detecting own world changes)
+  INSTANCE_SET_LOCAL_USER: "vrchat:instance:setLocalUser",
 } as const;
 
 export type VRChatChannel =

@@ -63,6 +63,16 @@ export function InstanceMonitorDashboard({ className }: InstanceMonitorDashboard
         setIsMonitoring(monitorStatus.isRunning);
         setCurrentWorld(monitorStatus.currentWorld);
         setStats(currentStats);
+
+        // Check if user is logged in to VRChat and set local user for world transition detection
+        try {
+          const authState = await window.vrchatAPI.getAuthState();
+          if (authState.isAuthenticated && authState.displayName) {
+            await window.instanceMonitorAPI.setLocalUser(authState.displayName);
+          }
+        } catch {
+          // Auth check is optional, instance monitor works without it
+        }
       } catch (error) {
         console.error("Failed to initialize instance monitor state:", error);
       } finally {
@@ -98,11 +108,21 @@ export function InstanceMonitorDashboard({ className }: InstanceMonitorDashboard
       }
     });
 
+    // Auth state changes - update local user for world transition detection
+    const unsubAuth = window.vrchatAPI.onAuthStateChanged((state) => {
+      if (state.isAuthenticated && state.displayName) {
+        window.instanceMonitorAPI.setLocalUser(state.displayName);
+      } else {
+        window.instanceMonitorAPI.setLocalUser(null);
+      }
+    });
+
     return () => {
       unsubMonitor();
       unsubStats();
       unsubLogs();
       unsubEvents();
+      unsubAuth();
     };
   }, [addLog]);
 

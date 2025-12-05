@@ -24,7 +24,8 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Naprawione
 - Poprawione parsowanie nazwy świata z logów VRChat (obsługa końcówek linii Windows)
 - Automatyczne wykrywanie aktualnego świata przy starcie monitorowania
-- Nie wyświetlanie się ikony blokersóws
+- Naprawiono fałszywe powiadomienia "opuścił instancję" przy zmianie świata przez użytkownika
+- Poprawiona ścieżka do ikony aplikacji w konfiguracji buildera
 
 ---
 

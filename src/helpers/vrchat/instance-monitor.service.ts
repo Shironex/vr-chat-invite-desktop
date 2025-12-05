@@ -40,6 +40,10 @@ class InstanceMonitorServiceClass {
   private currentInstanceId: string | null = null;
   private currentRegion: string | null = null;
 
+  // Local user tracking (to detect when WE leave, not others)
+  private localUserDisplayName: string | null = null;
+  private isInWorldTransition = false;
+
   // Statistics
   private stats: InstanceMonitorStats = {
     playersJoined: 0,
@@ -128,7 +132,7 @@ class InstanceMonitorServiceClass {
     const trimmedLine = line.trim();
     if (!trimmedLine) return;
 
-    // Check for world entry
+    // Check for world entry - this clears the transition state
     const worldMatch = PATTERNS.WORLD_ENTER.exec(trimmedLine);
     if (worldMatch) {
       const worldName = worldMatch[1].trim();
@@ -136,7 +140,13 @@ class InstanceMonitorServiceClass {
       this.stats.worldChanges++;
       this.lastActivity = Date.now();
 
-      debugLog.info(`[Instance] Entered world: ${worldName}`);
+      // Clear transition state - we've entered a new world
+      if (this.isInWorldTransition) {
+        debugLog.info(`[Instance] World transition complete, entered: ${worldName}`);
+        this.isInWorldTransition = false;
+      } else {
+        debugLog.info(`[Instance] Entered world: ${worldName}`);
+      }
 
       if (this.onInstanceEventCallback) {
         const event: InstanceEvent = {
@@ -193,9 +203,23 @@ class InstanceMonitorServiceClass {
     if (leaveMatch) {
       const displayName = leaveMatch[1].trim();
       const userId = leaveMatch[2];
-      this.stats.playersLeft++;
       this.lastActivity = Date.now();
 
+      // Check if this is the local user leaving (we're changing worlds)
+      if (this.localUserDisplayName && displayName === this.localUserDisplayName) {
+        debugLog.info(`[Instance] Local user leaving, starting world transition`);
+        this.isInWorldTransition = true;
+        // Don't count our own leave or send event
+        return;
+      }
+
+      // If we're in world transition, suppress leave events (they're false positives)
+      if (this.isInWorldTransition) {
+        debugLog.debug(`[Instance] Suppressing leave event during world transition: ${displayName}`);
+        return;
+      }
+
+      this.stats.playersLeft++;
       debugLog.info(`[Instance] Player left: ${displayName} (${userId})`);
 
       if (this.onInstanceEventCallback) {
@@ -499,6 +523,22 @@ class InstanceMonitorServiceClass {
    */
   getCurrentWorld(): string | null {
     return this.currentWorld;
+  }
+
+  /**
+   * Set the local user's display name (from VRChat auth)
+   * This is used to detect when WE leave a world vs when others leave
+   */
+  setLocalUserDisplayName(displayName: string | null): void {
+    this.localUserDisplayName = displayName;
+    debugLog.info(`[Instance] Local user display name set: ${displayName || "none"}`);
+  }
+
+  /**
+   * Get the local user's display name
+   */
+  getLocalUserDisplayName(): string | null {
+    return this.localUserDisplayName;
   }
 }
 

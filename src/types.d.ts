@@ -358,6 +358,9 @@ interface InstanceMonitorAPI {
   setWebhookSettings: (settings: Partial<InstanceWebhookSettings>) => Promise<void>;
   resetWebhookSettings: () => Promise<InstanceWebhookSettings>;
 
+  // Local User (for detecting own world changes)
+  setLocalUser: (displayName: string | null) => Promise<void>;
+
   // VRChat Process (reuse from vrchatAPI)
   checkVRChatProcess: () => Promise<boolean>;
 

@@ -767,6 +767,18 @@ export function registerVRChatListeners(window: BrowserWindow) {
     return defaults;
   });
 
+  // ─────────────────────────────────────────────────────────────────
+  // Instance Local User Handler
+  // ─────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.INSTANCE_SET_LOCAL_USER,
+    async (_event, displayName: string | null): Promise<void> => {
+      debugLog.ipc(`INSTANCE_SET_LOCAL_USER called: ${displayName}`);
+      InstanceMonitorService.setLocalUserDisplayName(displayName);
+    }
+  );
+
   // Initialize instance webhook service with saved settings
   InstanceWebhookService.updateSettings(SettingsService.getInstanceWebhookSettings());
 
