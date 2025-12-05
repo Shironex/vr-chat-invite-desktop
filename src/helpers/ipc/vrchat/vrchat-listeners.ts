@@ -39,6 +39,7 @@ import type {
 import { InstanceMonitorService } from "../../vrchat/instance-monitor.service";
 import { InstanceWebhookService } from "../../vrchat/instance-webhook.service";
 import { InstanceLogBufferService } from "../../vrchat/instance-log-buffer.service";
+import { DebugReportService } from "../../vrchat/debug-report.service";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -801,6 +802,30 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
   // Initialize instance webhook service with saved settings
   InstanceWebhookService.updateSettings(SettingsService.getInstanceWebhookSettings());
+
+  // ─────────────────────────────────────────────────────────────────
+  // Debug Report Handlers
+  // ─────────────────────────────────────────────────────────────────
+
+  // Set up debug report service callbacks
+  DebugReportService.setAuthStateCallback(() => VRChatAuthService.getAuthState());
+  DebugReportService.setMonitorStateCallback(() => LogMonitorService.getStatus().isRunning);
+  DebugReportService.setInstanceMonitorStateCallback(() => InstanceMonitorService.getStatus().isRunning);
+  DebugReportService.setInviterStatsCallback(() => InviteQueueService.getStats());
+  DebugReportService.setInstanceStatsCallback(() => InstanceMonitorService.getStats());
+
+  ipcMain.handle(VRCHAT_CHANNELS.DEBUG_REPORT_IS_CONFIGURED, async (): Promise<boolean> => {
+    debugLog.ipc("DEBUG_REPORT_IS_CONFIGURED called");
+    return DebugReportService.isConfigured();
+  });
+
+  ipcMain.handle(
+    VRCHAT_CHANNELS.DEBUG_REPORT_SEND,
+    async (_event, userDescription?: string): Promise<{ success: boolean; error?: string }> => {
+      debugLog.ipc("DEBUG_REPORT_SEND called");
+      return DebugReportService.sendReport(userDescription);
+    }
+  );
 
   debugLog.success("VRChat IPC listeners registered");
 }

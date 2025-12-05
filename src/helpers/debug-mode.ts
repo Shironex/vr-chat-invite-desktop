@@ -3,6 +3,7 @@ import { app, BrowserWindow } from "electron";
 import path from "path";
 import { DEBUG_CONSOLE } from "../config/app.config";
 import { windowRegistry } from "./window-registry";
+import { DebugReportService } from "./vrchat/debug-report.service";
 
 let isDebugMode = false;
 let debugConsoleWindow: BrowserWindow | null = null;
@@ -139,9 +140,13 @@ export function isDebugEnabled(): boolean {
 
 /**
  * Debug logger with colored output (for main process)
+ * Logs are also captured in DebugReportService for debug reports
  */
 export const debugLog = {
   info: (message: string, ...args: unknown[]) => {
+    // Always capture info logs for debug reports
+    DebugReportService.addLog("info", message);
+
     if (isDebugMode) {
       log.info(`ℹ️  ${message}`, ...args);
       sendToDebugConsole("info", message, args);
@@ -156,6 +161,9 @@ export const debugLog = {
   },
 
   warn: (message: string, ...args: unknown[]) => {
+    // Always capture warnings for debug reports
+    DebugReportService.addLog("warn", message);
+
     if (isDebugMode) {
       log.warn(`⚠️  ${message}`, ...args);
       sendToDebugConsole("warn", message, args);
@@ -163,6 +171,9 @@ export const debugLog = {
   },
 
   error: (message: string, ...args: unknown[]) => {
+    // Always capture errors for debug reports (even in production)
+    DebugReportService.addLog("error", message);
+
     if (isDebugMode) {
       log.error(`❌ ${message}`, ...args);
       sendToDebugConsole("error", message, args);
@@ -170,6 +181,9 @@ export const debugLog = {
   },
 
   debug: (message: string, ...args: unknown[]) => {
+    // Capture debug logs for reports
+    DebugReportService.addLog("debug", message);
+
     if (isDebugMode) {
       log.debug(`🔍 ${message}`, ...args);
       sendToDebugConsole("debug", message, args);
@@ -184,6 +198,9 @@ export const debugLog = {
   },
 
   ipc: (message: string, ...args: unknown[]) => {
+    // Capture IPC logs for reports
+    DebugReportService.addLog("ipc", message, "IPC");
+
     if (isDebugMode) {
       log.debug(`📡 [IPC] ${message}`, ...args);
       sendToDebugConsole("ipc", message, args);
@@ -205,6 +222,9 @@ export const debugLog = {
   },
 
   network: (message: string, ...args: unknown[]) => {
+    // Always capture network logs for debug reports
+    DebugReportService.addLog("network", message, "NETWORK");
+
     if (isDebugMode) {
       log.debug(`🌐 [NETWORK] ${message}`, ...args);
       sendToDebugConsole("network", message, args);

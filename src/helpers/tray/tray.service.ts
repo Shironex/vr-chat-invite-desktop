@@ -31,7 +31,7 @@ class TrayServiceClass {
     // Load icon - use different paths for packaged vs development
     const iconPath = app.isPackaged
       ? path.join(process.resourcesPath, "icon.ico")
-      : path.join(__dirname, "../../assets/icon.ico");
+      : path.join(app.getAppPath(), "src/assets/icon.ico");
 
     try {
       const icon = nativeImage.createFromPath(iconPath);

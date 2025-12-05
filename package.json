@@ -1,7 +1,7 @@
 {
   "name": "vrchat-group-inviter",
   "productName": "VRChat Group Inviter",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Desktop app that monitors VRChat log files and auto-invites detected players to a group",
   "main": "dist-electron/main.js",
   "private": true,

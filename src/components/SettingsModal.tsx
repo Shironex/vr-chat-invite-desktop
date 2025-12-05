@@ -24,6 +24,8 @@ import {
   Webhook,
   Users,
   Gauge,
+  Bug,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -149,6 +152,9 @@ export default function SettingsModal() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isDetectingPath, setIsDetectingPath] = useState(false);
+  const [isDebugReportConfigured, setIsDebugReportConfigured] = useState(false);
+  const [isSendingDebugReport, setIsSendingDebugReport] = useState(false);
+  const [debugReportDescription, setDebugReportDescription] = useState("");
 
   // All settings state
   const [settings, setSettings] = useState<AllSettings>({
@@ -184,7 +190,7 @@ export default function SettingsModal() {
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rateLimits, vrchatPath, tray, inviterWebhook, instanceWebhook, language] =
+      const [rateLimits, vrchatPath, tray, inviterWebhook, instanceWebhook, language, debugConfigured] =
         await Promise.all([
           window.vrchatAPI.getSettings(),
           window.vrchatAPI.getVRChatPath(),
@@ -192,6 +198,7 @@ export default function SettingsModal() {
           window.vrchatAPI.getWebhookSettings(),
           window.instanceMonitorAPI.getWebhookSettings(),
           window.vrchatAPI.getLanguage(),
+          window.vrchatAPI.isDebugReportConfigured(),
         ]);
 
       const { local: theme } = await getCurrentTheme();
@@ -205,6 +212,7 @@ export default function SettingsModal() {
         inviterWebhook: inviterWebhook,
         instanceWebhook: instanceWebhook,
       });
+      setIsDebugReportConfigured(debugConfigured);
       setIsDirty(false);
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -325,6 +333,24 @@ export default function SettingsModal() {
       }
     } catch (error) {
       toast.error(t("pathBrowseFailed", { error: String(error) }));
+    }
+  };
+
+  // Handle debug report send
+  const handleSendDebugReport = async () => {
+    setIsSendingDebugReport(true);
+    try {
+      const result = await window.vrchatAPI.sendDebugReport(debugReportDescription || undefined);
+      if (result.success) {
+        toast.success(t("debugReportSent"));
+        setDebugReportDescription("");
+      } else {
+        toast.error(t("debugReportFailed", { error: result.error }));
+      }
+    } catch (error) {
+      toast.error(t("debugReportFailed", { error: String(error) }));
+    } finally {
+      setIsSendingDebugReport(false);
     }
   };
 
@@ -553,6 +579,53 @@ export default function SettingsModal() {
                       />
                     </div>
                   </div>
+
+                  {/* Debug Report Section - only shown if configured */}
+                  {isDebugReportConfigured && (
+                    <>
+                      <Separator />
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Bug className="h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-sm font-semibold">{t("debugReportTitle")}</h3>
+                        </div>
+                        <p className="text-muted-foreground text-sm">{t("debugReportDescription")}</p>
+
+                        {/* Description field */}
+                        <div className="space-y-2">
+                          <Label className="text-sm">{t("debugReportDescriptionLabel")}</Label>
+                          <Textarea
+                            placeholder={t("debugReportDescriptionPlaceholder")}
+                            value={debugReportDescription}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDebugReportDescription(e.target.value)}
+                            rows={3}
+                            className="resize-none"
+                          />
+                          <p className="text-muted-foreground text-xs">{t("debugReportDescriptionHint")}</p>
+                        </div>
+
+                        {/* Send button */}
+                        <Button
+                          variant="outline"
+                          onClick={handleSendDebugReport}
+                          disabled={isSendingDebugReport}
+                          className="w-full"
+                        >
+                          {isSendingDebugReport ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {t("debugReportSending")}
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              {t("debugReportSend")}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 {/* ─────────────────────────────────────────────────────────────────

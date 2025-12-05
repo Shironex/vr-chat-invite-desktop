@@ -439,6 +439,10 @@ interface VRChatAPI {
   getLogBuffer: () => Promise<InviterLogEntry[]>;
   clearLogBuffer: () => Promise<void>;
 
+  // Debug Report
+  isDebugReportConfigured: () => Promise<boolean>;
+  sendDebugReport: (userDescription?: string) => Promise<{ success: boolean; error?: string }>;
+
   // Event Listeners (return unsubscribe function)
   onAuthStateChanged: (callback: (state: VRChatAuthState) => void) => () => void;
   on2FARequired: (callback: (methods: string[]) => void) => () => void;

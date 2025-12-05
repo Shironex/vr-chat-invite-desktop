@@ -112,6 +112,14 @@ export const VRCHAT_CHANNELS = {
 
   // Instance Local User (for detecting own world changes)
   INSTANCE_SET_LOCAL_USER: "vrchat:instance:setLocalUser",
+
+  // ─────────────────────────────────────────────────────────────────
+  // Debug Report
+  // ─────────────────────────────────────────────────────────────────
+
+  // Debug Report Control
+  DEBUG_REPORT_SEND: "vrchat:debug:sendReport",
+  DEBUG_REPORT_IS_CONFIGURED: "vrchat:debug:isConfigured",
 } as const;
 
 export type VRChatChannel =

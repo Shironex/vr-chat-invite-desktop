@@ -7,6 +7,24 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.6] - 2025-12-05
+
+### Dodane
+- **Raport diagnostyczny** - nowa funkcja do wysyłania logów debugowania na Discord
+  - Przycisk "Wyślij raport diagnostyczny" w Ustawienia > Aplikacja
+  - Zbieranie logów z zapraszania, monitora instancji i wewnętrznych błędów/ostrzeżeń
+  - Informacje o systemie: wersja aplikacji, platforma, OS
+  - Status uwierzytelnienia i monitorowania
+  - Opcjonalny opis problemu od użytkownika
+  - Pełny payload JSON jako załącznik
+  - Konfigurowany przez `DEBUG_WEBHOOK_URL` w secrets.config.ts
+- Wewnętrzny bufor logów do przechwytywania błędów, ostrzeżeń i logów sieciowych
+
+### Naprawione
+- Naprawiono ścieżkę do ikony tray w trybie deweloperskim
+
+---
+
 ## [1.2.5] - 2025-12-05
 
 ### Zmienione

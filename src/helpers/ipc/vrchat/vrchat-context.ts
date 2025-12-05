@@ -453,6 +453,22 @@ export function exposeVRChatContext() {
         ipcRenderer.removeListener(VRCHAT_CHANNELS.SESSION_STATS_UPDATED, handler);
       };
     },
+
+    // ─────────────────────────────────────────────────────────────────
+    // Debug Report
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Check if debug webhook is configured
+     */
+    isDebugReportConfigured: (): Promise<boolean> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.DEBUG_REPORT_IS_CONFIGURED),
+
+    /**
+     * Send debug report to webhook
+     */
+    sendDebugReport: (userDescription?: string): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke(VRCHAT_CHANNELS.DEBUG_REPORT_SEND, userDescription),
   });
 }
 
