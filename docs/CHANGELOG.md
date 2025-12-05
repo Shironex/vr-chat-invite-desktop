@@ -7,6 +7,15 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.1.0] - 2025-12-05
+
+### Dodane
+- Pokazanie operatora w webhookach Discord - stopka pokazuje nazwę zalogowanego użytkownika VRChat ("Wysłane przez {{nazwa}}")
+- Automatyczne ustawianie operatora przy logowaniu, weryfikacji 2FA i przywracaniu sesji
+- Czyszczenie operatora przy wylogowaniu
+
+---
+
 ## [1.0.0] - 2025-01-XX
 
 ### Dodane

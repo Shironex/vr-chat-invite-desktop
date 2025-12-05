@@ -26,6 +26,7 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStarted: "Monitoring started",
     monitorStartedDesc: "Started monitoring VRChat logs for group **{{groupName}}**",
     userId: "User ID",
+    sentBy: "Sent by {{operatorName}}",
   },
   pl: {
     inviteSuccess: "Zaproszenie wysłane",
@@ -42,6 +43,7 @@ const WEBHOOK_TRANSLATIONS = {
     monitorStarted: "Monitorowanie rozpoczęte",
     monitorStartedDesc: "Rozpoczęto monitorowanie logów VRChat dla grupy **{{groupName}}**",
     userId: "User ID",
+    sentBy: "Wysłane przez {{operatorName}}",
   },
 } as const;
 
@@ -86,6 +88,9 @@ class DiscordWebhookService {
   private batchTimer: NodeJS.Timeout | null = null;
   private isProcessing = false;
 
+  // Current operator (logged-in VRChat user) for footer attribution
+  private operatorName: string | null = null;
+
   // User-configurable webhook settings (defaults to disabled)
   private settings: WebhookSettings = {
     enabled: false,
@@ -115,6 +120,25 @@ class DiscordWebhookService {
   updateSettings(newSettings: WebhookSettings): void {
     this.settings = { ...newSettings };
     debugLog.info(`Discord webhook settings updated: enabled=${this.settings.enabled}`);
+  }
+
+  /**
+   * Set the current operator (logged-in user) for footer attribution
+   */
+  setOperator(displayName: string | null): void {
+    this.operatorName = displayName;
+    debugLog.info(`Discord webhook operator set: ${displayName ?? "none"}`);
+  }
+
+  /**
+   * Get footer with operator attribution
+   */
+  private getOperatorFooter(): { text: string } | undefined {
+    if (!this.operatorName) return undefined;
+    const t = this.getTranslations();
+    return {
+      text: this.interpolate(t.sentBy, { operatorName: this.operatorName }),
+    };
   }
 
   /**
@@ -169,6 +193,7 @@ class DiscordWebhookService {
           inline: true,
         },
       ],
+      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 
@@ -201,6 +226,7 @@ class DiscordWebhookService {
           inline: true,
         },
       ],
+      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 
@@ -223,6 +249,7 @@ class DiscordWebhookService {
         minutes: Math.round(pauseDuration / 60),
       }),
       color: COLORS.warning,
+      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 
@@ -252,6 +279,7 @@ class DiscordWebhookService {
             },
           ]
         : undefined,
+      footer: this.getOperatorFooter(),
       timestamp: new Date().toISOString(),
     };
 

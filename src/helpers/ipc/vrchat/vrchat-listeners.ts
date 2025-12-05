@@ -70,6 +70,7 @@ export function registerVRChatListeners(window: BrowserWindow) {
         }
         // Send Discord notification on successful login (without 2FA)
         if (result.isAuthenticated && result.displayName) {
+          discordWebhook.setOperator(result.displayName);
           discordWebhook.sendAuthSuccess(result.displayName);
         }
         return result;
@@ -83,6 +84,7 @@ export function registerVRChatListeners(window: BrowserWindow) {
   ipcMain.handle(VRCHAT_CHANNELS.AUTH_LOGOUT, async (): Promise<void> => {
     debugLog.ipc("AUTH_LOGOUT called");
     await VRChatAuthService.logout();
+    discordWebhook.setOperator(null);
     sendToRenderer(VRCHAT_CHANNELS.AUTH_STATE_CHANGED, {
       isAuthenticated: false,
       requiresTwoFactor: false,
@@ -98,6 +100,7 @@ export function registerVRChatListeners(window: BrowserWindow) {
         sendToRenderer(VRCHAT_CHANNELS.AUTH_STATE_CHANGED, result);
         // Send Discord notification on successful 2FA verification
         if (result.isAuthenticated && result.displayName) {
+          discordWebhook.setOperator(result.displayName);
           discordWebhook.sendAuthSuccess(result.displayName);
         }
         return result;
@@ -539,6 +542,12 @@ export function registerVRChatListeners(window: BrowserWindow) {
 
   // Initialize discord webhook with saved settings
   discordWebhook.updateSettings(SettingsService.getWebhookSettings());
+
+  // Set operator from existing session if logged in
+  const authState = VRChatAuthService.getAuthState();
+  if (authState.isAuthenticated && authState.displayName) {
+    discordWebhook.setOperator(authState.displayName);
+  }
 
   // Set up tray service callbacks for context menu actions
   TrayService.onStartMonitoring = async () => {
