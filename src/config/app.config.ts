@@ -60,8 +60,8 @@ export const HTML_TITLE = "VRChat Group Inviter";
  * Should match package.json's build.publish section
  */
 export const GITHUB_CONFIG = {
-  owner: "yourusername",
-  repo: "vrchat-group-inviter",
+  owner: "Shironex",
+  repo: "vr-chat-invite-desktop",
 };
 
 /**

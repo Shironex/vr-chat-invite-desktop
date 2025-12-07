@@ -7,6 +7,26 @@ Projekt stosuje [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.7] - 2025-12-07
+
+### Zmienione
+- **Licencja** - zmiana z MIT na ograniczoną licencję (ALL RIGHTS RESERVED) z informacją © 2025 Shironex / Blokersi
+- **Konfiguracja GitHub** - naprawiono wyświetlanie zmian w aplikacji
+- **Sekcja Informacji Prawnych** - dodano nową sekcję w ustawieniach > Ogólne z informacją o prawach autorskich
+- **Pozycjonowanie przycisku Odśwież w Changelog** - dodano margines i tooltip
+  - Przycisk "Odśwież" teraz wyświetla tooltip po najechaniu
+  - Dodano margines od prawej krawędzi
+  - Zmieniona ikona
+
+### Dodane
+- Wyświetlanie informacji prawnych w modalu ustawień (ikona scale, copyright holder, prawa zastrzeżone)
+- Tłumaczenia: `legalSection`, `copyrightHolder`, `allRightsReserved` (PL/EN)
+- Tłumaczenia: `changelogCached`, `changelogRefresh` (PL/EN)
+- Plik LICENSE w artefaktach budowania
+- Tooltip component do ChangelogHistoryDialog
+
+---
+
 ## [1.2.6] - 2025-12-05
 
 ### Dodane

@@ -1,7 +1,7 @@
 {
   "name": "vrchat-group-inviter",
   "productName": "VRChat Group Inviter",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Desktop app that monitors VRChat log files and auto-invites detected players to a group",
   "main": "dist-electron/main.js",
   "private": true,
@@ -24,7 +24,7 @@
     "test:all": "vitest run && playwright test"
   },
   "author": "Shironex <kacperlachowiczwp.pl@wp.pl>",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "repository": {
     "type": "git",
     "url": "https://github.com/Shironex/vr-chat-invite-desktop.git"
@@ -35,7 +35,8 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE"
     ],
     "directories": {
       "output": "release"
@@ -124,6 +125,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.11",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-router": "^1.132.41",

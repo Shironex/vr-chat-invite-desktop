@@ -26,6 +26,11 @@ i18n.use(initReactI18next).init({
         themeSystem: "Systemowy",
         versionSection: "Wersja",
         currentVersion: "Aktualna wersja",
+        // Legal Section
+        legalSection: "Informacje prawne",
+        copyrightHolder: "Shironex | Blokersi",
+        allRightsReserved:
+          "Wszystkie prawa zastrzeżone. Nieautoryzowane kopiowanie, modyfikowanie lub dystrybucja tego oprogramowania jest zabroniona.",
         // Update Dialog
         updateAvailableTitle: "Dostępna aktualizacja",
         updateReadyTitle: "Aktualizacja gotowa",
@@ -46,6 +51,8 @@ i18n.use(initReactI18next).init({
         changelogNoNotes: "Brak notatek dla tego wydania",
         changelogRetry: "Spróbuj ponownie",
         changelogNoConfig: "Brak konfiguracji GitHub",
+        changelogCached: "Cache ({{time}})",
+        changelogRefresh: "Odśwież",
         // === VRChat Inviter ===
         // Login Form
         loginTitle: "Logowanie VRChat",
@@ -336,6 +343,11 @@ i18n.use(initReactI18next).init({
         themeSystem: "System",
         versionSection: "Version",
         currentVersion: "Current version",
+        // Legal Section
+        legalSection: "Legal Information",
+        copyrightHolder: "Shironex | Blokersi",
+        allRightsReserved:
+          "All rights reserved. Unauthorized copying, modification, or distribution of this software is prohibited.",
         // Update Dialog
         updateAvailableTitle: "Update Available",
         updateReadyTitle: "Update Ready",
@@ -356,6 +368,8 @@ i18n.use(initReactI18next).init({
         changelogNoNotes: "No release notes available",
         changelogRetry: "Retry",
         changelogNoConfig: "GitHub configuration missing",
+        changelogCached: "Cached ({{time}})",
+        changelogRefresh: "Refresh",
         // === VRChat Inviter ===
         // Login Form
         loginTitle: "VRChat Login",

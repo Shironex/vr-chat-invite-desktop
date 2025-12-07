@@ -16,6 +16,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ChevronDown, ChevronRight, History, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { APP_CONFIG } from "@/config/app.config";
 import {
@@ -140,8 +146,9 @@ export function ChangelogHistoryDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title={t("changelogHistory")}>
-          <History className="h-5 w-5" />
+        <Button variant="ghost" size="sm" className="gap-2">
+          <History className="h-4 w-4" />
+          {t("changelogHistory")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
@@ -151,22 +158,30 @@ export function ChangelogHistoryDialog() {
               <History className="h-5 w-5" />
               {t("changelogHistoryTitle")}
             </DialogTitle>
-            <div className="flex items-center gap-2">
+            <div className="mr-6 flex items-center gap-2">
               {fromCache && cacheRemainingMs > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  Cached ({formatCacheTime(cacheRemainingMs)})
+                  {t("changelogCached", { time: formatCacheTime(cacheRemainingMs) })}
                 </span>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleRefresh}
-                disabled={loading}
-                title="Refresh releases"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t("changelogRefresh")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           <DialogDescription>{t("changelogHistoryDesc")}</DialogDescription>
